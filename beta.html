@@ -1,0 +1,2700 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Farm BETA</title>
+    <style>
+        /* --- CSS (Dark Mode Only) --- */
+        :root {
+            /* Colors, Animations, Cursor */
+            --body-bg: #2c3e50;
+            --container-bg: #34495e;
+            --section-bg: #46607a;
+            --section-border: #5a7a9a;
+            --text-color: #ecf0f1;
+            --heading-color: #98dbaa;
+            --heading-color-sub: #a8eaaa;
+            --accent-color: #8fcf8f;
+            --accent-hover-color: #7ebf7e;
+            --accent-active-color: #70b070;
+            --accent-selected-bg: #c8e8ca;
+            --disabled-color: #7f8c8d;
+            --plot-bg: #6c3e00;
+            --plot-empty-bg: #4f3a2e;
+            --plot-empty-hover-bg: #694f42;
+            --plot-locked-bg: #555;
+            --plot-ready-bg: #507a50;
+            --plot-ready-border: #76c08f;
+            --progress-bar-bg: #8fd0a8;
+            --log-text-color: #bdc3c7;
+            --log-success-color: #98dbaa;
+            --log-error-color: #e74c3c;
+            --log-info-color: #bdc3c7;
+            --log-gold-color: #ffd700;
+            --input-bg: #2c3e50;
+            --input-border: #5a7a9a;
+            --button-text-color: white;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --link-color: #a8eaaa;
+            --achievement-incomplete-color: var(--text-color);
+            --achievement-complete-color: var(--disabled-color);
+            --achievement-complete-icon-filter: grayscale(60%);
+            --button-shadow-color: rgba(0, 0, 0, 0.2);
+            --plot-hover-shadow: rgba(255, 255, 255, 0.1);
+            --ach-desc-color: #bdc3c7;
+            --ach-reward-color: #98dbaa;
+            --log-success-color-rgb: 152, 219, 170;
+            --popup-bg: var(--section-bg);
+            --popup-border: var(--section-border);
+            --popup-text-color: var(--text-color);
+            --popup-title-color: var(--heading-color);
+            --popup-shadow: rgba(0, 0, 0, 0.4);
+            --tip-border-color: var(--link-color);
+            --shovel-cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" style="font-size: 24px;"><text x="0" y="24">⛏️</text></svg>') 4 24, auto;
+            --animation-duration-fast: 0.18s;
+            --animation-duration-normal: 0.25s;
+            --animation-duration-slow: 0.5s;
+            --animation-duration-very-slow: 1s;
+            --bounce-cubic-bezier: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Animations */
+        @keyframes fadeInSlideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes plantPulse {
+            0% {
+                transform: scale(1);
+                filter: brightness(1)
+            }
+
+            50% {
+                transform: scale(.9);
+                filter: brightness(1.2)
+            }
+
+            100% {
+                transform: scale(1);
+                filter: brightness(1)
+            }
+        }
+
+        @keyframes harvestPop {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+                filter: brightness(1.1)
+            }
+
+            70% {
+                transform: scale(1.1);
+                opacity: .4;
+                filter: brightness(1.3)
+            }
+
+            100% {
+                transform: scale(.6);
+                opacity: 0;
+                filter: brightness(1)
+            }
+        }
+
+        @keyframes unlockHighlight {
+            0% {
+                background-color: transparent
+            }
+
+            40% {
+                background-color: rgba(var(--log-success-color-rgb), .3)
+            }
+
+            100% {
+                background-color: transparent
+            }
+        }
+
+        @keyframes selectedPulse {
+            0% {
+                box-shadow: 0 1px 3px var(--button-shadow-color), inset 0 0 0 2px var(--accent-color)
+            }
+
+            50% {
+                box-shadow: 0 1px 3px var(--button-shadow-color), inset 0 0 0 3px var(--accent-hover-color)
+            }
+
+            100% {
+                box-shadow: 0 1px 3px var(--button-shadow-color), inset 0 0 0 2px var(--accent-color)
+            }
+        }
+
+        @keyframes rainbow-bg {
+            0% {
+                background-position: 0% 50%
+            }
+
+            50% {
+                background-position: 100% 50%
+            }
+
+            100% {
+                background-position: 0% 50%
+            }
+        }
+
+        @keyframes stars-twinkle {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            padding: 10px;
+            transition: background-color var(--animation-duration-normal) ease, color var(--animation-duration-normal) ease
+        }
+
+        #game-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1250px;
+            width: 100%;
+            background-color: var(--container-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            transition: background-color var(--animation-duration-normal) ease
+        }
+
+        #farm-area,
+        #controls-area {
+            flex: 1;
+            min-width: 350px;
+            display: flex;
+            flex-direction: column
+        }
+
+        @media (min-width:950px) {
+            #farm-area {
+                flex-grow: 1.4
+            }
+        }
+
+        h1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            text-align: center;
+            color: var(--heading-color);
+            margin-top: 5px;
+            margin-bottom: 10px;
+            transition: color var(--animation-duration-normal) ease
+        }
+
+        h1 {
+            margin-bottom: 15px
+        }
+
+        h2 {
+            color: var(--heading-color-sub)
+        }
+
+        h3 {
+            margin-top: 15px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--section-border);
+            padding-bottom: 4px;
+            text-align: left;
+            color: var(--heading-color-sub);
+            transition: color var(--animation-duration-normal) ease, border-color var(--animation-duration-normal) ease
+        }
+
+        h4 {
+            margin-top: 8px;
+            margin-bottom: 4px;
+            font-weight: 400;
+            color: #bdc3c7;
+            text-align: left
+        }
+
+        #resources {
+            background-color: var(--section-bg);
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid var(--section-border);
+            text-align: center;
+            transition: background-color var(--animation-duration-normal) ease, border-color var(--animation-duration-normal) ease
+        }
+
+        #resources span {
+            margin-right: 15px;
+            font-weight: 700;
+            font-size: 1.1em
+        }
+
+        #weather-display {
+            font-weight: normal;
+            font-size: 0.95em;
+            color: var(--log-info-color);
+            margin-left: 10px;
+            display: inline-block;
+        }
+
+        #farm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            background-color: var(--plot-bg);
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 180px;
+            margin-bottom: 15px;
+            transition: background-color .3s ease, cursor .1s ease;
+            cursor: default
+        }
+
+        #farm-grid:hover {
+            cursor: var(--shovel-cursor)
+        }
+
+        .plot {
+            width: 60px;
+            height: 60px;
+            background-color: var(--plot-empty-bg);
+            border: 1px solid var(--plot-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            position: relative;
+            border-radius: 3px;
+            overflow: hidden;
+            transform-origin: center;
+            transition: background-color var(--animation-duration-normal) ease, border-color var(--animation-duration-normal) ease, transform var(--animation-duration-fast) var(--ease-out-expo), filter var(--animation-duration-fast) ease, box-shadow var(--animation-duration-fast) ease;
+            will-change: transform, filter, box-shadow, background-color
+        }
+
+        .plot:hover:not(.locked) {
+            transform: scale(1.07);
+            filter: brightness(1.1);
+            box-shadow: 0 4px 10px var(--plot-hover-shadow);
+            z-index: 1
+        }
+
+        .plot.empty:hover {
+            background-color: var(--plot-empty-hover-bg)
+        }
+
+        .plot.locked {
+            background-color: var(--plot-locked-bg);
+            cursor: not-allowed;
+            font-size: 18px
+        }
+
+        .plot.locked:hover {
+            filter: none;
+            transform: none;
+            box-shadow: none;
+            z-index: 0;
+            cursor: not-allowed !important
+        }
+
+        .plot .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background-color: var(--progress-bar-bg);
+            width: 0;
+            transition: width .1s linear, background-color var(--animation-duration-normal) ease
+        }
+
+        .plot.ready {
+            background-color: var(--plot-ready-bg);
+            border: 2px solid var(--plot-ready-border)
+        }
+
+        .plot.ready:hover {
+            transform: scale(1.1);
+            filter: brightness(1.1);
+            box-shadow: 0 5px 14px var(--plot-hover-shadow)
+        }
+
+        .plot.plot-plant-animate {
+            animation: plantPulse var(--animation-duration-slow) var(--bounce-cubic-bezier) forwards
+        }
+
+        .plot-content {
+            display: inline-block;
+            transition: transform var(--animation-duration-normal) ease, opacity var(--animation-duration-normal) ease;
+            will-change: transform, opacity;
+            line-height: 1;
+            position: relative;
+            z-index: 2;
+        }
+
+        .plot-content.status-icon-present {
+            font-size: 20px;
+            letter-spacing: -2px;
+        }
+
+        .plot.plot-harvest-animate .plot-content {
+            animation: harvestPop 0.25s cubic-bezier(.17, .67, .83, .67) forwards;
+        }
+
+        /* Mutation Plot Styles */
+        .plot.plot-is-moonlit {
+            background-color: #4a3d6a;
+        }
+
+        .plot.plot-is-scorched {
+            background-color: #7a4f3a;
+        }
+
+        .plot.plot-is-warm {
+            background-color: #7a703a;
+        }
+
+        .plot.plot-is-cool {
+            background-color: #3a5c7a;
+        }
+
+        .plot.plot-is-shocked {
+            background-color: #4d4023;
+            box-shadow: inset 0 0 12px 2px #f0ff8d;
+            border-color: #f0ff8d;
+        }
+
+        .plot.plot-is-rainbow {
+            background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+            background-size: 200% 200%;
+            animation: rainbow-bg 4s ease infinite;
+        }
+
+        .plot.plot-is-cosmic {
+            background: linear-gradient(230deg, #1d0f3b, #3a236d, #2b1de8);
+            background-size: 150% 150%;
+            animation: rainbow-bg 8s ease-in-out infinite;
+        }
+
+        .plot.plot-is-cosmic::before,
+        .plot.plot-is-cosmic::after,
+        .plot.plot-is-cosmic .plot-content::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 1px;
+            height: 1px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 15px -20px 0 0px white, -10px 18px 0 1px white, 25px 8px 0 0px white, -22px -15px 0 1px white, -5px 5px 0 0px white, 30px 25px 0 0px white;
+            animation: stars-twinkle 3s ease-in-out infinite alternate;
+        }
+
+        .plot.plot-is-cosmic::after {
+            width: 2px;
+            height: 2px;
+            box-shadow: 10px 15px 0 0px white, -18px -10px 0 0px white, -8px 25px 0 0px white;
+            animation-duration: 4.5s;
+        }
+
+        .plot.plot-is-cosmic .plot-content::before {
+            width: 1px;
+            height: 1px;
+            box-shadow: 12px 22px 0 0px white, -25px 5px 0 0px white;
+            animation-duration: 6s;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px 3px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: var(--accent-color);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: 4px;
+            vertical-align: middle;
+            font-weight: 500;
+            box-shadow: 0 2px 4px var(--button-shadow-color);
+            transform-origin: center;
+            transition: background-color var(--animation-duration-fast) ease, color var(--animation-duration-fast) ease, transform var(--animation-duration-fast) var(--ease-out-expo), box-shadow var(--animation-duration-fast) ease, filter var(--animation-duration-fast) ease;
+            will-change: transform, filter, box-shadow
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--accent-hover-color);
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px var(--button-shadow-color);
+            filter: brightness(1.08)
+        }
+
+        button:active:not(:disabled) {
+            background-color: var(--accent-active-color);
+            transform: scale(.97);
+            box-shadow: 0 1px 3px var(--button-shadow-color);
+            filter: brightness(.92);
+            transition-duration: .06s
+        }
+
+        button:disabled {
+            background-color: var(--disabled-color);
+            color: rgba(255, 255, 255, .7);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            filter: grayscale(30%)
+        }
+
+        .plant-button.selected-plant-button {
+            background-color: var(--accent-selected-bg);
+            color: var(--body-bg);
+            font-weight: bold;
+            filter: brightness(1.05);
+            box-shadow: 0 1px 3px var(--button-shadow-color), inset 0 0 0 2px var(--accent-color);
+            animation: selectedPulse 1.8s ease-in-out infinite
+        }
+
+        .plant-button.selected-plant-button:hover:not(:disabled) {
+            background-color: var(--accent-hover-color);
+            color: var(--button-text-color);
+            filter: brightness(1.1);
+            transform: scale(1.05)
+        }
+
+        .plant-button.selected-plant-button:active:not(:disabled) {
+            background-color: var(--accent-active-color);
+            transform: scale(.97);
+            filter: brightness(.95)
+        }
+
+        .shop-seed-unavailable,
+        .shop-seed-unavailable:hover,
+        .shop-seed-unavailable:active {
+            background-color: var(--disabled-color);
+            color: var(--log-error-color) !important;
+            cursor: not-allowed;
+            box-shadow: none;
+            filter: grayscale(30%);
+            transform: none;
+            padding: 8px 12px;
+            margin: 5px 3px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            vertical-align: middle;
+            font-weight: 500;
+        }
+
+        #inventory,
+        #shop,
+        #actions,
+        #save-load,
+        #messages,
+        #achievements,
+        #dev-console,
+        #daily-quests {
+            margin-bottom: 15px;
+            background-color: var(--section-bg);
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid var(--section-border);
+            transition: background-color var(--animation-duration-normal) ease, border-color var(--animation-duration-normal) ease
+        }
+
+        #inventory ul {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0
+        }
+
+        #inventory li {
+            margin-bottom: 5px;
+            padding-left: 5px;
+            font-size: 0.95em;
+            border-radius: 3px;
+            user-select: none;
+        }
+
+        #inventory #produce-inventory li {
+            cursor: pointer;
+        }
+
+        #inventory li:hover {
+            background-color: var(--container-bg);
+        }
+
+        .inventory-item-icon {
+            display: inline-block;
+            min-width: 1.2em;
+            text-align: left;
+        }
+
+        .inventory-weight {
+            font-size: 0.85em;
+            color: var(--log-info-color);
+            margin-left: 5px;
+        }
+
+        .favorite-icon {
+            color: #e74c3c;
+            margin-right: 4px;
+        }
+
+        #planting-options,
+        #buy-seeds,
+        #sell-produce-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px
+        }
+
+        #messages {
+            height: 180px;
+            overflow-y: scroll;
+            font-size: .9em;
+            color: var(--log-text-color);
+            transition: color var(--animation-duration-normal) ease;
+            scroll-behavior: smooth;
+            padding-top: 5px
+        }
+
+        #messages h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-align: left;
+            border-bottom: none;
+            padding-bottom: 0;
+            color: var(--heading-color-sub)
+        }
+
+        #messages p {
+            margin: 0 0 5px;
+            padding-left: 2px;
+            white-space: pre-wrap;
+            opacity: 0;
+            animation: fadeInSlideDown var(--animation-duration-slow) ease-out forwards
+        }
+
+        #messages p.log-success {
+            color: var(--log-success-color);
+            font-weight: 700
+        }
+
+        #messages p.log-error {
+            color: var(--log-error-color);
+            font-weight: 700
+        }
+
+        #messages p.log-info {
+            color: var(--log-info-color)
+        }
+
+        #messages p.log-gold {
+            color: var(--log-gold-color);
+            font-weight: 700
+        }
+
+        #messages p.log-dev {
+            color: var(--link-color);
+            font-family: monospace;
+            font-weight: bold
+        }
+
+        #save-load h2,
+        #dev-console h3,
+        #daily-quests h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: left
+        }
+
+        #save-load textarea,
+        #dev-command-input {
+            width: calc(100% - 12px);
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: .9em;
+            font-family: monospace;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 3px;
+            padding: 5px;
+            cursor: text;
+            transition: background-color var(--animation-duration-normal) ease, color var(--animation-duration-normal) ease, border-color var(--animation-duration-normal) ease
+        }
+
+        #save-load textarea {
+            min-height: 60px;
+            resize: vertical
+        }
+
+        #dev-command-input {
+            min-height: auto;
+            resize: none
+        }
+
+        #save-code-output {
+            background-color: var(--input-bg);
+            cursor: default
+        }
+
+        .save-controls,
+        .mod-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .mod-controls {
+            margin-top: 15px;
+            border-top: 1px dashed var(--section-border);
+            padding-top: 10px;
+        }
+
+        #mod-file-input {
+            font-size: 0.9em;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 3px;
+            padding: 4px 6px;
+            max-width: calc(100% - 110px);
+            cursor: pointer;
+            transition: background-color var(--animation-duration-normal) ease, color var(--animation-duration-normal) ease, border-color var(--animation-duration-normal) ease;
+        }
+
+        #mod-file-input::file-selector-button {
+            padding: 4px 8px;
+            margin-right: 8px;
+            font-size: 0.9em;
+            cursor: pointer;
+            background-color: var(--accent-color);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: 3px;
+            transition: background-color var(--animation-duration-fast) ease;
+        }
+
+        #mod-file-input::file-selector-button:hover {
+            background-color: var(--accent-hover-color);
+        }
+
+        #farm-upgrades-container {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--section-border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        #achievements ul {
+            list-style: none;
+            padding: 0;
+            margin: 0
+        }
+
+        #achievements li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 5px 0;
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(128, 128, 128, .1);
+            transition: background-color var(--animation-duration-normal) ease
+        }
+
+        #achievements li:last-child {
+            border-bottom: none
+        }
+
+        #achievements li:hover:not(.completed) {
+            background-color: rgba(128, 128, 128, .05)
+        }
+
+        #achievements .ach-icon {
+            font-size: 1.6em;
+            min-width: 1.6em;
+            text-align: center;
+            margin-top: 2px
+        }
+
+        #achievements .ach-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 2px
+        }
+
+        #achievements .ach-name {
+            font-weight: 700;
+            font-size: 1em;
+            line-height: 1.2
+        }
+
+        #achievements .ach-desc-reward {
+            line-height: 1.3;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0 8px
+        }
+
+        #achievements .ach-desc {
+            font-size: .85em;
+            color: var(--ach-desc-color)
+        }
+
+        #achievements .ach-reward {
+            font-size: .85em;
+            font-style: italic;
+            color: var(--ach-reward-color);
+            font-weight: 500;
+            white-space: nowrap
+        }
+
+        #achievements li.completed {
+            color: var(--achievement-complete-color)
+        }
+
+        #achievements li.completed .ach-icon {
+            filter: var(--achievement-complete-icon-filter)
+        }
+
+        #achievements li.completed .ach-name::after {
+            content: " ✔️";
+            color: var(--log-success-color);
+            font-weight: 400;
+            margin-left: 4px
+        }
+
+        #achievements li.completed .ach-desc,
+        #achievements li.completed .ach-reward {
+            color: var(--achievement-complete-color);
+            font-style: normal
+        }
+
+        #achievements li.completed:hover {
+            background-color: transparent
+        }
+
+        #achievements li.incomplete {
+            color: var(--achievement-incomplete-color)
+        }
+
+        #achievements li.achievement-unlocked-animate {
+            animation: unlockHighlight var(--animation-duration-very-slow) ease-out
+        }
+
+        .popup {
+            position: fixed;
+            padding: 12px 18px;
+            border-radius: 6px;
+            background-color: var(--popup-bg);
+            border: 1px solid var(--popup-border);
+            box-shadow: 0 4px 12px var(--popup-shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity var(--animation-duration-normal) ease-out, transform var(--animation-duration-normal) ease-out;
+            pointer-events: none;
+            min-width: 250px;
+            max-width: 400px;
+        }
+
+        .popup.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .popup-icon {
+            font-size: 2em;
+            flex-shrink: 0;
+        }
+
+        .popup-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 0.95em;
+            color: var(--popup-text-color);
+            line-height: 1.3;
+        }
+
+        .popup-title {
+            font-weight: bold;
+            color: var(--popup-title-color);
+        }
+
+        .popup-reward {
+            font-style: italic;
+            color: var(--ach-reward-color);
+            font-size: 0.9em;
+        }
+
+        #achievement-popup {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            border-left: 5px solid var(--log-success-color);
+        }
+
+        #achievement-popup.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #tip-popup {
+            bottom: 20px;
+            right: 20px;
+            border-left: 5px solid var(--tip-border-color);
+        }
+
+        #tip-popup .popup-icon {
+            font-size: 1.6em;
+        }
+
+        #actions {
+            position: relative;
+        }
+
+        /* harvest-all-button styles now handled by #farm-grid-actions button */
+
+        #harvest-all-button:hover:not(:disabled) {
+            background-color: var(--accent-hover-color);
+        }
+
+        #sell-all-produce-button {
+            padding: 6px 10px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            background-color: var(--accent-active-color);
+            display: block;
+            width: fit-content;
+        }
+
+        #sell-all-produce-button:hover:not(:disabled) {
+            background-color: var(--accent-hover-color);
+        }
+
+
+        #plot-tooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            line-height: 1.3;
+            z-index: 1010;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease-in-out;
+            max-width: 220px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            word-wrap: break-word;
+        }
+
+        #plot-tooltip.visible {
+            opacity: 1;
+        }
+
+        #plot-tooltip span {
+            display: inline-block;
+        }
+
+        #tooltip-crop-name {
+            font-weight: bold;
+        }
+
+        #tooltip-time-left {
+            font-size: 0.9em;
+            color: #eee;
+        }
+
+        #tooltip-weight-potential,
+        #tooltip-weight-actual {
+            font-size: 0.85em;
+            color: #ddd;
+        }
+
+        #daily-quests-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #daily-quests-list li {
+            background-color: var(--container-bg);
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        #daily-quests-list li.quest-completed:not(.quest-claimed) {
+            border-left-color: var(--log-success-color);
+        }
+
+        #daily-quests-list li.quest-claimed {
+            border-left-color: var(--disabled-color);
+            opacity: 0.7;
+        }
+
+        .quest-title {
+            font-weight: bold;
+            font-size: 1.05em;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        .quest-desc {
+            font-size: 0.9em;
+            color: var(--ach-desc-color);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .quest-progress-bar-container {
+            height: 8px;
+            background-color: var(--body-bg);
+            border-radius: 4px;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+
+        .quest-progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--progress-bar-bg);
+            transition: width 0.2s ease-out;
+        }
+
+        .quest-reward-text {
+            font-size: 0.85em;
+            color: var(--ach-reward-color);
+            margin-bottom: 6px;
+            font-style: italic;
+        }
+
+        .quest-claim-button {
+            font-size: 0.9em !important;
+            padding: 4px 8px !important;
+            margin-top: 5px !important;
+        }
+
+        /* Silver Mutation Plot Style */
+        .plot.plot-is-silver {
+            background-color: #6b7b8d;
+            box-shadow: inset 0 0 10px 2px #c0c0c0;
+            border-color: #c0c0c0;
+        }
+
+        /* Locked Fruit Indicator on Plot */
+        .plot .lock-indicator {
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            font-size: 10px;
+            z-index: 5;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+        }
+
+        .plot .lock-indicator:hover {
+            opacity: 1;
+        }
+
+        .plot.plot-fruit-locked {
+            outline: 2px dashed #e67e22;
+            outline-offset: -2px;
+        }
+
+        /* Seed Inventory Grid */
+        #seed-inventory {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2px 8px;
+        }
+
+        #seed-inventory li {
+            margin-bottom: 2px;
+            font-size: 0.9em;
+        }
+
+        /* Produce Inventory Grid */
+        #produce-inventory {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2px 8px;
+        }
+
+        #produce-inventory li {
+            margin-bottom: 2px;
+            font-size: 0.9em;
+        }
+
+        /* Rebirth Section */
+        #rebirth-section {
+            margin-bottom: 15px;
+            background-color: var(--section-bg);
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid var(--section-border);
+            transition: background-color var(--animation-duration-normal) ease, border-color var(--animation-duration-normal) ease;
+        }
+
+        #rebirth-section h3 {
+            color: #f0c040;
+        }
+
+        .rebirth-info {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            color: var(--log-info-color);
+        }
+
+        .rebirth-info strong {
+            color: var(--text-color);
+        }
+
+        /* Purchase Qty Toggle */
+        .qty-toggle-btn {
+            padding: 4px 10px;
+            font-size: 12px;
+            margin: 0 2px;
+            background-color: var(--disabled-color);
+            border-radius: 4px;
+        }
+
+        .qty-toggle-btn.active {
+            background-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .qty-toggle-btn:hover:not(:disabled) {
+            background-color: var(--accent-hover-color);
+        }
+
+        /* Farm Grid Action Buttons */
+        #farm-grid-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: stretch;
+        }
+
+        #farm-grid-actions button {
+            flex: 1;
+            font-size: 14px;
+            padding: 8px 12px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>
+        <span style="font-size: 0.85em;">🥕 Web Farm <strong style="color:var(--log-error-color);">BETA</strong></span>
+    </h1>
+
+    <div id="beta-overlay"
+        style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;justify-content:center;align-items:center;flex-direction:column;">
+        <div
+            style="background:var(--container-bg);padding:30px;border-radius:8px;border:2px solid var(--log-error-color);max-width:400px;text-align:center;box-shadow: 0 4px 15px rgba(255,100,100,0.3);">
+            <h2 style="color:var(--log-error-color);margin-top:0;">⚠️ BETA BUILD</h2>
+            <p style="margin-bottom:15px;color:var(--text-color);">This is a test version of Web Farm. Features may be
+                unstable, bugs may be present, and progress could be lost.</p>
+            <p style="margin-bottom:20px;font-weight:bold;color:var(--log-error-color);">Do NOT take screenshots or
+                share footage of this build.</p>
+            <button
+                style="padding:10px 20px;font-size:1.1em;background:var(--accent-color);color:#0f172a;border:none;border-radius:5px;cursor:pointer;font-weight:bold;"
+                onclick="document.getElementById('beta-overlay').remove()">I Agree</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <!-- Farm Area -->
+        <div id="farm-area">
+            <h2>Your Farm</h2>
+            <div id="resources">
+                <span>💰 Money: <span id="money">0</span></span>
+                <span id="weather-display"></span>
+            </div>
+            <div id="farm-grid"><!-- Plots --></div>
+            <div id="farm-grid-actions">
+                <button id="harvest-all-button" onclick="harvestAllReadyCrops()" disabled>🌱 Harvest All</button>
+                <button id="plant-all-button" onclick="plantAllSelectedSeed()" disabled>🌾 Plant All</button>
+            </div>
+            <div id="actions">
+                <h3>🌱 Plant</h3>
+                <p>Select, then click empty plot 🟫. Right-click empty for Plant All, right-click crop for Lock.</p>
+                <div id="planting-options"></div>
+            </div>
+            <div id="achievements">
+                <h3><span style="font-size:1.2em">🏆</span> Achievements</h3>
+                <ul id="achievements-list"></ul>
+            </div>
+        </div>
+
+        <!-- Controls Area -->
+        <div id="controls-area">
+            <h2>Manage & Trade</h2>
+            <div id="inventory">
+                <h3><span style="font-size:1.2em">🎒</span> Inventory</h3>
+                <h4>Seeds:</h4>
+                <ul id="seed-inventory"></ul>
+                <h4>Produce (Right-click to ❤):</h4>
+                <ul id="produce-inventory"></ul>
+            </div>
+            <div id="shop">
+                <h3><span style="font-size:1.2em">🛒</span> Shop</h3>
+                <div id="purchase-qty-toggle" style="margin-bottom:8px;">
+                    <label style="font-size:0.9em; margin-right:6px;">Buy Qty:</label>
+                    <button class="qty-toggle-btn active" onclick="setPurchaseQty(1)">1</button>
+                    <button class="qty-toggle-btn" onclick="setPurchaseQty(10)">10</button>
+                    <button class="qty-toggle-btn" onclick="setPurchaseQty(20)">20</button>
+                    <button class="qty-toggle-btn" onclick="setPurchaseQty(50)">50</button>
+                </div>
+                <h4>Buy Seeds: <span id="shop-refresh-timer"
+                        style="font-weight:normal; font-size:0.85em; color:var(--log-info-color);"></span></h4>
+                <div id="buy-seeds"></div>
+                <h4>Sell Produce:</h4>
+                <div id="sell-produce-area"></div>
+                <button id="sell-all-produce-button" onclick="sellAllProduce()" disabled>💵 Sell All</button>
+                <div id="farm-upgrades-container">
+                    <h4>Farm Upgrades:</h4><!-- Buttons -->
+                </div>
+            </div>
+            <div id="rebirth-section">
+                <h3><span style="font-size:1.2em">🔄</span> Rebirth</h3>
+                <div id="rebirth-content"></div>
+            </div>
+            <div id="daily-quests">
+                <h3><span style="font-size:1.2em">📅</span> Daily Quests <span id="quest-status-text"
+                        style="font-weight:normal; font-size:0.85em; color:var(--log-error-color);"></span> <span
+                        id="quest-reset-timer"
+                        style="font-weight:normal; font-size:0.85em; color:var(--log-info-color);"></span></h3>
+                <ul id="daily-quests-list"></ul>
+            </div>
+            <div id="messages">
+                <h2>📜 Log</h2><!-- Messages -->
+            </div>
+            <div id="dev-console" style="display:block;">
+                <h3><span style="font-size:1.2em">🛠️</span> Dev Console</h3><label for="dev-command-input"
+                    style="display:block;margin-bottom:5px;font-weight:bold;">Enter Command:</label><input type="text"
+                    id="dev-command-input" placeholder="/help">
+            </div>
+            <div id="save-load">
+                <h2><span style="font-size:1.2em">💾</span> Save / Load</h2>
+                <div class="save-section">
+                    <label for="save-code-output">Your Save Code:</label>
+                    <textarea id="save-code-output" readonly placeholder="Click 'Generate Save Code'"></textarea>
+                    <div class="save-controls">
+                        <button id="generate-save-button" onclick="saveGame()">Generate</button>
+                        <button id="copy-code-button" onclick="copySaveCode()" disabled>Copy</button>
+                    </div>
+                </div>
+                <div class="load-section">
+                    <label for="save-code-input">Load Game from Code:</label>
+                    <textarea id="save-code-input" placeholder="Paste save code here."></textarea>
+                    <div class="save-controls" style="margin-bottom: 0;">
+                        <button id="load-save-button" onclick="loadGamePrompt()">Load</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="achievement-popup" class="popup">
+        <span id="ach-popup-icon" class="popup-icon"></span>
+        <div class="popup-text">
+            <span id="ach-popup-title" class="popup-title"></span>
+            <span id="ach-popup-reward" class="popup-reward"></span>
+        </div>
+    </div>
+    <div id="tip-popup" class="popup">
+        <span class="popup-icon">💡</span>
+        <span id="tip-popup-text" class="popup-text"></span>
+    </div>
+
+    <div id="plot-tooltip" class="plot-tooltip">
+        <span id="tooltip-crop-name"></span><br>
+        <span id="tooltip-time-left"></span><br>
+        <span id="tooltip-weight-potential"></span><br>
+        <span id="tooltip-weight-actual"></span><br>
+        <span id="tooltip-sell-multiplier" style="display:none; font-size:0.85em; color:#ffd700;"></span>
+    </div>
+
+
+    <script>
+        // --- Game Data (Modifiable) ---
+        let CROP_DATA = {
+            'wheat': { name: 'Wheat', icon: '🌾', seedCost: 5, sellPrice: 12, growTime: 10000, weightRange: [0.9, 1.1] },
+            'carrot': { name: 'Carrot', icon: '🥕', seedCost: 14, sellPrice: 32, growTime: 20000, weightRange: [0.85, 1.15] },
+            'lettuce': { name: 'Lettuce', icon: '🥬', seedCost: 18, sellPrice: 42, growTime: 24000, weightRange: [0.8, 1.2] },
+            'potato': { name: 'Potato', icon: '🥔', seedCost: 24, sellPrice: 55, growTime: 28000, weightRange: [0.9, 1.1] },
+            'corn': { name: 'Corn', icon: '🌽', seedCost: 32, sellPrice: 72, growTime: 35000, weightRange: [0.9, 1.1] },
+            'strawberry': { name: 'Strawberry', icon: '🍓', seedCost: 42, sellPrice: 92, growTime: 30000, weightRange: [0.95, 1.05] },
+            'kiwi': { name: 'Kiwi', icon: '🥝', seedCost: 55, sellPrice: 120, growTime: 32000, weightRange: [0.9, 1.1] },
+            'mango': { name: 'Mango', icon: '🥭', seedCost: 70, sellPrice: 155, growTime: 38000, weightRange: [0.85, 1.35] },
+            'mushroom': { name: 'Mushroom', icon: '🍄', seedCost: 90, sellPrice: 195, growTime: 45000, weightRange: [0.7, 1.4] },
+            'cherry': { name: 'Cherry', icon: '🍒', seedCost: 110, sellPrice: 240, growTime: 55000, weightRange: [0.95, 1.05] },
+            'peach': { name: 'Peach', icon: '🍑', seedCost: 135, sellPrice: 290, growTime: 31000, weightRange: [0.9, 1.1] },
+            'grapes': { name: 'Grapes', icon: '🍇', seedCost: 130, sellPrice: 280, growTime: 60000, weightRange: [0.9, 1.1] },
+            'tomato': { name: 'Tomato', icon: '🍅', seedCost: 165, sellPrice: 350, growTime: 70000, weightRange: [0.85, 1.15] },
+            'broccoli': { name: 'Broccoli', icon: '🥦', seedCost: 140, sellPrice: 290, growTime: 80000, weightRange: [0.8, 1.35] },
+            'tree': { name: 'Tree', icon: '🌳', seedCost: 180, sellPrice: null, growTime: 120000, yields: ['apple', 'banana', 'orange', 'pineapple'] },
+            'eggplant': { name: 'Eggplant', icon: '🍆', seedCost: 200, sellPrice: 420, growTime: 90000, weightRange: [0.85, 1.3] },
+            'avocado': { name: 'Avocado', icon: '🥑', seedCost: 220, sellPrice: 460, growTime: 85000, weightRange: [0.9, 1.15] },
+            'watermelon': { name: 'Watermelon', icon: '🍉', seedCost: 280, sellPrice: 580, growTime: 100000, weightRange: [0.7, 1.7] },
+            'lemon': { name: 'Lemon', icon: '🍋', seedCost: 400, sellPrice: 830, growTime: 75000, weightRange: [0.9, 1.1] },
+            'pear': { name: 'Pear', icon: '🍐', seedCost: 600, sellPrice: 1250, growTime: 85000, weightRange: [0.85, 1.15] },
+            'cactus': { name: 'Cactus', icon: '🌵', seedCost: 1200, sellPrice: 2500, growTime: 90000, weightRange: [0.8, 1.4] },
+            'chilli': { name: 'Chilli', icon: '🌶️', seedCost: 2500, sellPrice: 5200, growTime: 110000, weightRange: [0.8, 1.25] },
+            'palm_tree': { name: 'Palm Tree', icon: '🌴', seedCost: 1800, sellPrice: null, growTime: 140000, yields: ['coconut'] },
+            'melon': { name: 'Melon', icon: '🍈', seedCost: 12000, sellPrice: 25000, growTime: 150000, weightRange: [0.85, 1.15], rarity: 'ultra_rare', stockChance: 0.20 },
+            'cherry_blossom': { name: 'Cherry Blossom', icon: '🌸', seedCost: 35000, sellPrice: 72000, growTime: 180000, weightRange: [0.85, 1.15], rarity: 'ultra_rare', stockChance: 0.10 },
+            'dango': { name: 'Dango', icon: '🍡', seedCost: 80000, sellPrice: 165000, growTime: 200000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.08 },
+            'taco': { name: 'Taco', icon: '🌮', seedCost: 670000, sellPrice: 1500000, growTime: 240000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 1.0, isEvent: true, eventWeather: 'raining_tacos' },
+            'bell_pepper': { name: 'Bell Pepper', icon: '🫑', seedCost: 3000000, sellPrice: 9000000, growTime: 600000, weightRange: [0.95, 1.05], rarity: 'ultra_rare', stockChance: 0.05 },
+            'apple': { name: 'Apple', icon: '🍎', seedCost: null, sellPrice: 110, growTime: null, weightRange: [0.9, 1.1] },
+            'banana': { name: 'Banana', icon: '🍌', seedCost: null, sellPrice: 180, growTime: null, weightRange: [0.85, 1.15] },
+            'orange': { name: 'Orange', icon: '🍊', seedCost: null, sellPrice: 145, growTime: null, weightRange: [0.9, 1.1] },
+            'pineapple': { name: 'Pineapple', icon: '🍍', seedCost: null, sellPrice: 210, growTime: null, weightRange: [0.8, 1.4] },
+            'coconut': { name: 'Coconut', icon: '🥥', seedCost: null, sellPrice: 2400, growTime: null, weightRange: [0.9, 1.3] },
+        };
+        const DEFAULT_CROP_DATA = JSON.parse(JSON.stringify(CROP_DATA));
+        let ACHIEVEMENT_DATA = {
+            'harvest_1_wheat': { name: "First Harvest", icon: "🌾", desc: "Harvest your first Wheat.", rwd: 0, type: 'stats.h', tgt: 'wheat', thr: 1 },
+            'harvest_5_carrot': { name: "Carrot Collector", icon: "🥕", desc: "Harvest 5 Carrots.", rwd: 15, type: 'stats.h', tgt: 'carrot', thr: 5 },
+            'harvest_5_kiwi': { name: "Kiwi King", icon: "🥝", desc: "Harvest 5 Kiwis.", rwd: 20, type: 'stats.h', tgt: 'kiwi', thr: 5 },
+            'harvest_5_lettuce': { name: "Lettuce Lover", icon: "🥬", desc: "Harvest 5 Lettuce.", rwd: 18, type: 'stats.h', tgt: 'lettuce', thr: 5 },
+            'harvest_5_potato': { name: "Potato Power", icon: "🥔", desc: "Harvest 5 Potatoes.", rwd: 20, type: 'stats.h', tgt: 'potato', thr: 5 },
+            'harvest_5_mango': { name: "Mango Tango", icon: "🥭", desc: "Harvest 5 Mangoes.", rwd: 25, type: 'stats.h', tgt: 'mango', thr: 5 },
+            'harvest_5_watermelon': { name: "Melon Mania", icon: "🍉", desc: "Harvest 5 Watermelons.", rwd: 30, type: 'stats.h', tgt: 'watermelon', thr: 5 },
+            'harvest_1_grapes': { name: "Grape Job!", icon: "🍇", desc: "Harvest your first Grapes.", rwd: 20, type: 'stats.h', tgt: 'grapes', thr: 1 },
+            'harvest_1_cherry': { name: "Cherry Picked", icon: "🍒", desc: "Harvest your first Cherries.", rwd: 25, type: 'stats.h', tgt: 'cherry', thr: 1 },
+            'harvest_apple': { name: "An Apple a Day", icon: "🍎", desc: "Harvest an Apple from a tree.", rwd: 15, type: 'stats.h', tgt: 'apple', thr: 1 },
+            'harvest_banana': { name: "Going Bananas", icon: "🍌", desc: "Harvest a Banana from a tree.", rwd: 20, type: 'stats.h', tgt: 'banana', thr: 1 },
+            'harvest_peach': { name: "Peachy Keen", icon: "🍑", desc: "Harvest a Peach.", rwd: 18, type: 'stats.h', tgt: 'peach', thr: 1 },
+            'harvest_pineapple': { name: "Pineapple Power", icon: "🍍", desc: "Harvest a Pineapple from a tree.", rwd: 22, type: 'stats.h', tgt: 'pineapple', thr: 1 },
+            'harvest_coconut': { name: "Coconut Craze", icon: "🥥", desc: "Harvest a Coconut from a tree.", rwd: 25, type: 'stats.h', tgt: 'coconut', thr: 1 },
+            'harvest_3_chilli': { name: "Hot Stuff", icon: "🌶️", desc: "Harvest 3 Chilli peppers.", rwd: 50, type: 'stats.h', tgt: 'chilli', thr: 3 },
+            'harvest_3_pear': { name: "Pearfect Trio", icon: "🍐", desc: "Harvest 3 Pears.", rwd: 60, type: 'stats.h', tgt: 'pear', thr: 3 },
+            'harvest_rainbow': { name: "A Rare Sight", icon: "🌈", desc: "Harvest your first Rainbow crop.", rwd: 500, type: 'stats.mut', tgt: 'rainbow', thr: 1 },
+            'harvest_cosmic': { name: "One in a Million", icon: "🌌", desc: "Harvest your first Cosmic crop.", rwd: 2500, type: 'stats.mut', tgt: 'cosmic', thr: 1 },
+            'earn_100_money': { name: "Coin Collector", icon: "💰", desc: "Earn a total of 100 Money.", rwd: 15, type: 'stats.m', thr: 100 },
+            'earn_1000_money': { name: "Getting Rich", icon: "💎", desc: "Earn a total of 1,000 Money.", rwd: 25, type: 'stats.m', thr: 1000 },
+            'earn_10k_money': { name: "Money Bags", icon: "🏦", desc: "Earn a total of 10,000 Money.", rwd: 100, type: 'stats.m', thr: 10000 },
+            'own_5_plots': { name: "Land Owner", icon: "🏞️", desc: "Own 5 farm plots.", rwd: 20, type: 'state.p', thr: 5 },
+            'own_10_plots': { name: "Farm Baron", icon: "🏡", desc: "Own 10 farm plots.", rwd: 25, type: 'state.p', thr: 10 },
+            'rebirth_1': { name: "First Rebirth", icon: "🔄", desc: "Complete your first Rebirth.", rwd: 50000, type: 'state.rb', thr: 1 },
+            'upgrade_growth_max': { name: "Max Velocity", icon: "🚀", desc: `Reach max growth speed (Level 7).`, rwd: 500, type: 'state.g', thr: 7 },
+            'harvest_silver': { name: "Silver Lining", icon: "🥈", desc: "Harvest your first Silver crop.", rwd: 300, type: 'stats.mut', tgt: 'silver', thr: 1 },
+            'harvest_bell_pepper': { name: "Pepper Power", icon: "🫑", desc: "Harvest a Bell Pepper.", rwd: 50000, type: 'stats.h', tgt: 'bell_pepper', thr: 1 },
+            'complete_all': { name: "Farm Master", icon: "👑", desc: "Complete all other achievements.", rwd: 10000, type: 'all' }
+        };
+
+        const QUEST_DEFINITIONS = [
+            { id: "harvest_wheat_5", title: "Wheat Harvest", description: "Harvest 5 Wheat.", type: "harvest", targetCrop: "wheat", targetAmount: 5, rewards: { money: 800, seeds: { 'carrot': 8, 'lettuce': 5 } } },
+            { id: "plant_carrot_3", title: "Carrot Planting", description: "Plant 3 Carrots.", type: "plant", targetCrop: "carrot", targetAmount: 3, rewards: { money: 600, seeds: { 'wheat': 8, 'potato': 5 } } },
+            { id: "earn_money_100", title: "Daily Earnings", description: "Earn 250 Money today.", type: "earn_money", targetAmount: 250, rewards: { money: 500, seeds: { 'potato': 6, 'corn': 4 } } },
+            { id: "harvest_lettuce_2", title: "Lettuce Picking", description: "Harvest 2 Lettuce.", type: "harvest", targetCrop: "lettuce", targetAmount: 2, rewards: { money: 900, seeds: { 'strawberry': 5 } } },
+            { id: "plant_any_5", title: "Busy Planter", description: "Plant any 5 crops.", type: "plant_any", targetAmount: 5, rewards: { money: 1200, seeds: { 'corn': 6, 'strawberry': 5 } } },
+            { id: "sell_corn_3", title: "Corn Sale", description: "Sell 3 Corn.", type: "sell_produce_type", targetCrop: "corn", targetAmount: 3, rewards: { money: 1500, seeds: { 'kiwi': 5 } } },
+            { id: "sell_any_produce_5", title: "Market Day", description: "Sell any 5 produce items.", type: "sell_any_produce", targetAmount: 5, rewards: { money: 1000, seeds: { 'kiwi': 4, 'mango': 3 } } },
+            { id: "harvest_golden_1", title: "Golden Touch", description: "Harvest 1 Golden crop.", type: "harvest_golden", targetAmount: 1, rewards: { money: 2500, seeds: { 'mango': 5, 'mushroom': 4 } } },
+        ];
+
+
+        const INITIAL_PLOTS = 3; const MAX_PLOTS = 27; const PLOT_COST_BASE = 75; const PLOT_COST_INCREASE_FACTOR = 1.45;
+        const TICK_INTERVAL = 100; const AUTOSAVE_INTERVAL = 15000;
+        const SAVE_CODE_VERSION = 1.14;
+        const LOG_PRUNE_THRESHOLD = 80;
+        const XOR_SAVE_KEY = 'webfarmkey_34252465488682';
+        const DEV_ACTIVATION_CODE = 'dev-2588624836783023489768723895438973895';
+        const SHOP_REFRESH_MIN = 90 * 1000;
+        const SHOP_REFRESH_MAX = 120 * 1000;
+        const ALWAYS_AVAILABLE_SHOP_ITEMS = 8;
+        const ULTRA_RARE_SLOTS_IN_SHOP = 1;
+        const NORMAL_RARE_ROTATING_SLOTS = 7;
+        const DAILY_QUEST_COUNT = 2;
+
+        const MAX_REBIRTHS = 10;
+        const REBIRTH_BASE_COST = 75000;
+        const REBIRTH_COST_SCALE = 3.5;
+        const REBIRTH_MULTIPLIER_PER_LEVEL = 0.15;
+
+
+        const MAX_GROWTH_LEVELS = 7; const GROWTH_MULTIPLIERS = [1.0, 0.85, 0.70, 0.55, 0.40, 0.25, 0.15, 0.08]; const GROWTH_UPGRADE_COSTS = [200, 600, 1800, 5000, 12000, 500000, 3000000];
+
+        const SPECIAL_STATUSES = {
+            'golden': { name: 'Golden', icon: '🥇', chance: 0.10, sellMultiplier: 1.5, type: 'generic' },
+            'silver': { name: 'Silver', icon: '🥈', chance: 0.05, sellMultiplier: 1.8, type: 'generic' },
+            'bronze': { name: 'Bronze', icon: '🥉', chance: 0.15, sellMultiplier: 1.3, type: 'generic' },
+            'pollinated': { name: 'Pollinated', icon: '🍯', chance: 0.03, sellMultiplier: 2.5, type: 'generic' },
+            'rainbow': { name: 'Rainbow', icon: '🌈', chance: 0.03, sellMultiplier: 4.0, type: 'rare_generic' },
+            'cosmic': { name: 'Cosmic', icon: '🌌', chance: 0.01, sellMultiplier: 5.0, type: 'rare_generic' },
+            'scorched': { name: 'Scorched', icon: '☀️', chance: 0, sellMultiplier: 2.0, type: 'weather' },
+            'moonlit': { name: 'Moonlit', icon: '🌙', chance: 0, sellMultiplier: 3.0, type: 'weather' },
+            'frozen': { name: 'Frozen', icon: '🧊', chance: 0, sellMultiplier: 2.0, type: 'weather' },
+            'shocked': { name: 'Shocked', icon: '⚡', chance: 0, sellMultiplier: 3.0, type: 'weather' },
+            'wet': { name: 'Wet', icon: '💧', chance: 0, sellMultiplier: 2.0, type: 'weather' },
+            'cheese': { name: 'Cheese', icon: '🧀', chance: 0, sellMultiplier: 2.5, type: 'weather' },
+        };
+
+        const WEATHER_CONFIG = {
+            'sunny': {
+                name: 'Sunny', icon: '☀️', duration_ms: [2 * 60 * 1000, 4 * 60 * 1000], effects: [
+                    { status: 'scorched', chance: 0.04 }
+                ]
+            },
+            'lightning': {
+                name: 'Lightning', icon: '🌩️', duration_ms: [2 * 60 * 1000, 4 * 60 * 1000], effects: [
+                    { status: 'shocked', chance: 0.10 }, { status: 'wet', chance: 0.10 }
+                ]
+            },
+            'icy_rain': {
+                name: 'Icy Rain', icon: '🌨️', duration_ms: [2 * 60 * 1000, 4 * 60 * 1000], effects: [
+                    { status: 'frozen', chance: 0.15 }
+                ]
+            },
+            'gentle_rain': {
+                name: 'Gentle Rain', icon: '🌦️', duration_ms: [2 * 60 * 1000, 4 * 60 * 1000], effects: [
+                    { status: 'wet', chance: 0.15 }
+                ], growthModifier: 1.15
+            },
+            'night': {
+                name: 'Night', icon: '⭐', duration_ms: [2 * 60 * 1000, 4 * 60 * 1000], effects: [
+                    { status: 'moonlit', chance: 0.05 }
+                ]
+            },
+            'raining_tacos': {
+                name: 'Raining Tacos', icon: '🌮', duration_ms: [3 * 60 * 1000, 5 * 60 * 1000], effects: [
+                    { status: 'cheese', chance: 0.12 }
+                ]
+            }
+        };
+        const WEATHER_TYPE_KEYS = Object.keys(WEATHER_CONFIG);
+
+        let gameState = null; let gameLoopInterval = null; let autoSaveInterval = null;
+        let isDevModeEnabled = true; let isModActive = false; let activeModChecksum = null;
+        let achievementPopupTimeout = null; let tipPopupTimeout = null;
+        let activeTooltipPlotId = null;
+
+        const moneyEl = document.getElementById('money'); const farmGridEl = document.getElementById('farm-grid'); const seedInventoryEl = document.getElementById('seed-inventory'); const produceInventoryEl = document.getElementById('produce-inventory'); const plantingOptionsEl = document.getElementById('planting-options'); const buySeedsEl = document.getElementById('buy-seeds'); const sellProduceAreaEl = document.getElementById('sell-produce-area'); const messagesEl = document.getElementById('messages'); const saveCodeOutputEl = document.getElementById('save-code-output'); const saveCodeInputEl = document.getElementById('save-code-input'); const copyCodeButtonEl = document.getElementById('copy-code-button'); const farmUpgradesContainerEl = document.getElementById('farm-upgrades-container'); const achievementsListEl = document.getElementById('achievements-list'); const devConsoleEl = document.getElementById('dev-console'); const devCommandInputEl = document.getElementById('dev-command-input');
+        const achievementPopupEl = document.getElementById('achievement-popup'); const achPopupIconEl = document.getElementById('ach-popup-icon'); const achPopupTitleEl = document.getElementById('ach-popup-title'); const achPopupRewardEl = document.getElementById('ach-popup-reward');
+        const tipPopupEl = document.getElementById('tip-popup'); const tipPopupTextEl = document.getElementById('tip-popup-text');
+        const harvestAllButtonEl = document.getElementById('harvest-all-button');
+        const sellAllProduceButtonEl = document.getElementById('sell-all-produce-button');
+        const plotTooltipEl = document.getElementById('plot-tooltip'); const tooltipCropNameEl = document.getElementById('tooltip-crop-name'); const tooltipTimeLeftEl = document.getElementById('tooltip-time-left'); const tooltipWeightPotentialEl = document.getElementById('tooltip-weight-potential'); const tooltipWeightActualEl = document.getElementById('tooltip-weight-actual');
+        const tooltipSellMultiplierEl = document.getElementById('tooltip-sell-multiplier');
+        const plantAllButtonEl = document.getElementById('plant-all-button');
+        const shopRefreshTimerEl = document.getElementById('shop-refresh-timer');
+        const dailyQuestsSectionEl = document.getElementById('daily-quests');
+        const dailyQuestsListEl = document.getElementById('daily-quests-list');
+        const questResetTimerEl = document.getElementById('quest-reset-timer');
+        const questStatusTextEl = document.getElementById('quest-status-text');
+        const weatherDisplayEl = document.getElementById('weather-display');
+        const inventoryEl = document.getElementById('inventory');
+        const rebirthContentEl = document.getElementById('rebirth-content');
+
+        let purchaseQty = 1;
+        const setPurchaseQty = (qty) => {
+            purchaseQty = qty;
+            document.querySelectorAll('.qty-toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.textContent) === qty);
+            });
+            updateUI();
+        };
+
+        const xorCipher = (s, k) => { let r = ''; for (let i = 0; i < s.length; i++)r += String.fromCharCode(s.charCodeAt(i) ^ k.charCodeAt(i % k.length)); return r; }
+        const calculateChecksum = (s) => { let sum = 0; for (let i = 0; i < s.length; i++)sum = (sum + s.charCodeAt(i) * (i + 1)) % 65536; return sum.toString(16).padStart(4, '0'); }
+        const calculatePlotCost = () => { if (!gameState) return PLOT_COST_BASE; const p = Math.max(0, gameState.totalPlots - INITIAL_PLOTS), f = gameState.totalPlots > 15 ? PLOT_COST_INCREASE_FACTOR * 1.1 : PLOT_COST_INCREASE_FACTOR; return Math.floor(PLOT_COST_BASE * Math.pow(f, p)); }
+        const addMessage = (m, t = 'info', f = false) => { const l = m.toLowerCase(); if (!f && (l.includes('generated save'))) return; const c = messagesEl; if (!c) return; let h = c.querySelector('h2'); if (!h) { h = document.createElement('h2'); h.textContent = '📜 Log'; c.prepend(h); } const p = document.createElement('p'); const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit", second: "2-digit" }); p.textContent = `[${time}] ${m}`; p.className = `log-${t}`; h.after(p); const msgs = c.querySelectorAll('p'); if (msgs.length > LOG_PRUNE_THRESHOLD) { if (c.lastElementChild && c.lastElementChild.tagName === 'P') { c.removeChild(c.lastElementChild); } } c.scrollTop = 0; }
+        const calculateGrowthMultiplier = () => { return gameState ? (GROWTH_MULTIPLIERS[gameState.growthSpeedLevel] ?? GROWTH_MULTIPLIERS[0]) : 1.0; }
+        const calculateGrowthUpgradeCost = () => (!gameState || gameState.growthSpeedLevel >= MAX_GROWTH_LEVELS) ? Infinity : (GROWTH_UPGRADE_COSTS[gameState.growthSpeedLevel] ?? Infinity);
+        const formatTime = (ms, includeSeconds = true) => { if (ms <= 0) return includeSeconds ? "0s" : "0m"; let totalSeconds = Math.ceil(ms / 1000); const h = Math.floor(totalSeconds / 3600); totalSeconds %= 3600; const m = Math.floor(totalSeconds / 60); const s = totalSeconds % 60; let timeStr = ""; if (h > 0) timeStr += `${h}h `; if (m > 0) timeStr += `${m}m `; if (includeSeconds || (h === 0 && m === 0)) { if (s > 0 || (h === 0 && m === 0)) timeStr += `${s}s`; } return timeStr.trim() || (includeSeconds ? "0s" : "0m"); };
+        const getFormattedTimeLeft = (plotData) => { if (plotData?.state === 'growing' && plotData.plantedTime && plotData.growDuration) { let environmentalSpeedBoost = 1.0; if (gameState.currentWeather === 'gentle_rain' && WEATHER_CONFIG.gentle_rain.growthModifier) { environmentalSpeedBoost = WEATHER_CONFIG.gentle_rain.growthModifier; } const effectiveGrowDuration = plotData.growDuration / environmentalSpeedBoost; const timeElapsed = Date.now() - plotData.plantedTime; const timeLeftMs = Math.max(0, effectiveGrowDuration - timeElapsed); return timeLeftMs > 0 ? formatTime(timeLeftMs) : "Almost done!"; } return ""; }
+        const getRandomWeight = (range) => !range ? 1.0 : Math.random() * (range[1] - range[0]) + range[0];
+        const shuffleArray = (array) => { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; } return array; };
+        const getRandomDuration = (durationRangeMs) => Math.floor(Math.random() * (durationRangeMs[1] - durationRangeMs[0] + 1)) + durationRangeMs[0];
+        const parseItemKey = (itemKey) => { let tempKey = itemKey; const foundStatuses = []; const allStatusKeysSorted = Object.keys(SPECIAL_STATUSES).sort(); let statusesParsed = true; while (statusesParsed) { statusesParsed = false; for (const status of allStatusKeysSorted) { if (tempKey.startsWith(status + '_')) { foundStatuses.push(status); tempKey = tempKey.substring(status.length + 1); statusesParsed = true; break; } } } let baseKey = itemKey; let statusKeys = []; if (CROP_DATA[tempKey]) { baseKey = tempKey; statusKeys = foundStatuses; } let sellMultiplier = 1; let displayPrefix = ""; statusKeys.forEach(statusKey => { const statusInfo = SPECIAL_STATUSES[statusKey]; if (statusInfo) { sellMultiplier *= statusInfo.sellMultiplier; displayPrefix += `${statusInfo.icon}`; } }); return { baseKey, statusKeys, sellMultiplier, displayPrefix: displayPrefix ? displayPrefix + ' ' : '' }; };
+
+        const showAchievementPopup = (achData) => { if (!achievementPopupEl || !achData) return; clearTimeout(achievementPopupTimeout); achPopupIconEl.textContent = achData.icon || '🏆'; achPopupTitleEl.textContent = `Achievement: ${achData.name}`; achPopupRewardEl.textContent = achData.rwd > 0 ? `Reward: ${achData.rwd}💰` : ''; achPopupRewardEl.style.display = achData.rwd > 0 ? 'block' : 'none'; achievementPopupEl.classList.add('active'); achievementPopupTimeout = setTimeout(() => achievementPopupEl.classList.remove('active'), 5000); }
+        const showTip = (tipKey, message) => { if (!gameState?.shownTips || gameState.shownTips.includes(tipKey)) return; clearTimeout(tipPopupTimeout); tipPopupTextEl.textContent = message; tipPopupEl.classList.add('active'); gameState.shownTips.push(tipKey); tipPopupTimeout = setTimeout(() => tipPopupEl.classList.remove('active'), 7000); }
+
+        const checkAndGrantAchievement = (key) => { if (!gameState || !ACHIEVEMENT_DATA[key] || gameState.achievements[key]) return; const ach = ACHIEVEMENT_DATA[key]; let met = false; try { switch (ach.type) { case 'stats.h': met = (gameState.stats.harvested[ach.tgt] || 0) >= ach.thr; break; case 'stats.p': met = (gameState.stats.planted[ach.tgt] || 0) >= ach.thr; break; case 'stats.m': met = (gameState.stats.totalMoneyEarned || 0) >= ach.thr; break; case 'state.p': met = gameState.totalPlots >= ach.thr; break; case 'state.rb': met = gameState.rebirthCount >= ach.thr; break; case 'state.g': met = gameState.growthSpeedLevel >= ach.thr; break; case 'stats.mut': met = (gameState.stats.mutationsHarvested[ach.tgt] || 0) >= ach.thr; break; case 'all': met = Object.keys(ACHIEVEMENT_DATA).every(k => k === key || k === 'complete_all' || gameState.achievements[k]); break; default: console.warn(`Unk achievement type:${ach.type}`) } } catch (e) { console.error(`Achievement check fail ${key}:`, e); met = false; } if (met) { gameState.achievements[key] = true; let rwdMsg = ach.rwd > 0 ? ` Reward: +${ach.rwd}💰` : ""; if (ach.rwd > 0) gameState.money += ach.rwd; addMessage(`🏆 Achievement Unlocked: ${ach.name}!${rwdMsg}`, (key === 'complete_all') ? 'gold' : 'success', true); showAchievementPopup(ach); const li = achievementsListEl.querySelector(`li[data-ach-key="${key}"]`); if (li) { li.classList.add('achievement-unlocked-animate'); setTimeout(() => { li.classList.remove('achievement-unlocked-animate'); }, 1000); } updateUI(); if (key !== 'complete_all') checkAndGrantAchievement('complete_all'); } }
+        const checkAllAchievements = () => { if (!gameState) return; for (const k in ACHIEVEMENT_DATA) checkAndGrantAchievement(k); }
+
+        const selectCropToPlant = (key) => { if (!gameState) return; if (CROP_DATA[key]?.seedCost !== null) { gameState.selectedCropToPlant = key; updateUI(); } else addMessage(`Cannot select ${CROP_DATA[key]?.name || key}. It's not a seed.`, 'error', true); }
+
+        const plantCrop = (id) => {
+            if (!gameState || id < 0 || id >= gameState.plots.length) return;
+            const p = gameState.plots[id], key = gameState.selectedCropToPlant;
+            if (!p || p.state !== 'empty') { addMessage("Plot is not empty.", 'error', true); return; }
+            if (!key) { addMessage("Select a seed to plant.", 'error', true); return; }
+            const inf = CROP_DATA[key];
+            if (inf?.seedCost === null) { addMessage(`Cannot plant '${key}'.`, 'error', true); gameState.selectedCropToPlant = null; updateUI(); return; }
+            if (!(gameState.inventory.seeds[key] > 0)) { addMessage(`No ${inf.icon} seeds!`, 'error', true); return; }
+
+            gameState.inventory.seeds[key]--;
+            p.state = 'growing'; p.crop = key; p.plantedTime = Date.now();
+            p.growDuration = inf.growTime * calculateGrowthMultiplier();
+            p.finalWeightMultiplier = getRandomWeight(inf.weightRange);
+            p.specialStatuses = [];
+
+            const randRare = Math.random();
+            if (randRare < SPECIAL_STATUSES.cosmic.chance) {
+                p.specialStatuses.push('cosmic');
+            } else if (randRare < SPECIAL_STATUSES.cosmic.chance + SPECIAL_STATUSES.rainbow.chance) { p.specialStatuses.push('rainbow'); }
+            if (Math.random() < SPECIAL_STATUSES.pollinated.chance) p.specialStatuses.push('pollinated');
+            if (Math.random() < SPECIAL_STATUSES.golden.chance) p.specialStatuses.push('golden');
+            if (Math.random() < SPECIAL_STATUSES.silver.chance) p.specialStatuses.push('silver');
+            if (Math.random() < SPECIAL_STATUSES.bronze.chance) p.specialStatuses.push('bronze');
+
+            let activeWeatherEffects = [];
+            if (gameState.currentWeather && WEATHER_CONFIG[gameState.currentWeather]?.effects) {
+                activeWeatherEffects = WEATHER_CONFIG[gameState.currentWeather].effects;
+            }
+            if (activeWeatherEffects.length > 0) {
+                for (const effect of activeWeatherEffects) {
+                    if (Math.random() < effect.chance) {
+                        if (!p.specialStatuses.includes(effect.status)) {
+                            p.specialStatuses.push(effect.status);
+                        }
+                    }
+                }
+            }
+            p.specialStatuses.sort();
+
+            gameState.stats.planted[key] = (gameState.stats.planted[key] || 0) + 1;
+            let plantMessage = `Planted ${inf.icon} ${inf.name} in plot ${id + 1}.`;
+            if (p.specialStatuses.length > 0) {
+                const statusNames = p.specialStatuses.map(s => SPECIAL_STATUSES[s].name).join(', ');
+                const statusIcons = p.specialStatuses.map(s => SPECIAL_STATUSES[s].icon).join('');
+                plantMessage += ` It looks ${statusNames}! (${statusIcons})`;
+            }
+            plantMessage += ` (Est. final weight: ${p.finalWeightMultiplier.toFixed(2)}x)`;
+            addMessage(plantMessage, 'success');
+
+            updateQuestProgress('plant', 1, key);
+            updateQuestProgress('plant_any', 1);
+
+            const el = farmGridEl.querySelector(`.plot[data-plot-id="${id}"]`);
+            if (el) { el.classList.add('plot-plant-animate'); setTimeout(() => el.classList.remove('plot-plant-animate'), 500); }
+            const totalSeeds = Object.values(gameState.inventory.seeds).reduce((sum, count) => sum + count, 0);
+            if (totalSeeds === 0) showTip('outOfSeeds', "Out of seeds! Visit the Shop 🛒 to restock.");
+            checkAllAchievements(); updateUI();
+        }
+
+        const plantAllSelectedSeed = () => {
+            if (!gameState) return;
+            const key = gameState.selectedCropToPlant;
+            if (!key) { addMessage("Select a seed first.", 'error', true); return; }
+            const inf = CROP_DATA[key];
+            if (!inf || inf.seedCost === null) return;
+            let planted = 0;
+            for (let i = 0; i < gameState.plots.length; i++) {
+                const p = gameState.plots[i];
+                if (p.state === 'empty' && (gameState.inventory.seeds[key] > 0)) {
+                    gameState.inventory.seeds[key]--;
+                    p.state = 'growing'; p.crop = key; p.plantedTime = Date.now();
+                    p.growDuration = inf.growTime * calculateGrowthMultiplier();
+                    p.finalWeightMultiplier = getRandomWeight(inf.weightRange);
+                    p.specialStatuses = [];
+                    const randRare = Math.random();
+                    if (randRare < SPECIAL_STATUSES.cosmic.chance) p.specialStatuses.push('cosmic');
+                    else if (randRare < SPECIAL_STATUSES.cosmic.chance + SPECIAL_STATUSES.rainbow.chance) p.specialStatuses.push('rainbow');
+                    if (Math.random() < SPECIAL_STATUSES.pollinated.chance) p.specialStatuses.push('pollinated');
+                    if (Math.random() < SPECIAL_STATUSES.golden.chance) p.specialStatuses.push('golden');
+                    if (Math.random() < SPECIAL_STATUSES.silver.chance) p.specialStatuses.push('silver');
+                    if (Math.random() < SPECIAL_STATUSES.bronze.chance) p.specialStatuses.push('bronze');
+                    let activeWeatherEffects = [];
+                    if (gameState.currentWeather && WEATHER_CONFIG[gameState.currentWeather]?.effects) activeWeatherEffects = WEATHER_CONFIG[gameState.currentWeather].effects;
+                    for (const effect of activeWeatherEffects) { if (Math.random() < effect.chance && !p.specialStatuses.includes(effect.status)) p.specialStatuses.push(effect.status); }
+                    p.specialStatuses.sort();
+                    gameState.stats.planted[key] = (gameState.stats.planted[key] || 0) + 1;
+                    updateQuestProgress('plant', 1, key);
+                    updateQuestProgress('plant_any', 1);
+                    planted++;
+                }
+            }
+            if (planted > 0) { addMessage(`Planted ${planted} ${inf.icon} ${inf.name} seed${planted > 1 ? 's' : ''} across all empty plots!`, 'success'); checkAllAchievements(); updateUI(); }
+            else { addMessage(`No empty plots or no ${inf.icon} seeds left.`, 'error', true); }
+        };
+
+        const togglePlotLock = (id) => {
+            if (!gameState || id < 0 || id >= gameState.plots.length) return;
+            const p = gameState.plots[id];
+            if (!p || p.state === 'empty') return;
+            p.isLocked = !p.isLocked;
+            updateUI();
+        };
+
+        const getRebirthCost = (level) => Math.floor(REBIRTH_BASE_COST * Math.pow(REBIRTH_COST_SCALE, level));
+
+        const performRebirth = () => {
+            if (!gameState) return;
+            if (gameState.rebirthCount >= MAX_REBIRTHS) { addMessage("Max rebirths reached!", 'error', true); return; }
+            const cost = getRebirthCost(gameState.rebirthCount);
+            if (gameState.money < cost) { addMessage(`Need ${cost.toLocaleString()}💰 to rebirth. You have ${gameState.money.toLocaleString()}💰.`, 'error', true); return; }
+            const nextRebirthNum = gameState.rebirthCount + 1;
+            if (!confirm(`Are you sure you want to Rebirth?\n\nCost: ${cost.toLocaleString()}💰\nYou will LOSE: Money, plots, inventory, growth levels.\nYou will KEEP: Achievements.\nYou will GAIN: +${((REBIRTH_MULTIPLIER_PER_LEVEL) * 100).toFixed(0)}% permanent sell multiplier, +1 starting plot.\n\nCurrent rebirths: ${gameState.rebirthCount}/${MAX_REBIRTHS}`)) return;
+
+            gameState.rebirthCount = nextRebirthNum;
+            gameState.rebirthMultiplier = Math.pow(1 + REBIRTH_MULTIPLIER_PER_LEVEL, gameState.rebirthCount);
+            const savedAchievements = { ...gameState.achievements };
+            const savedRebirthCount = gameState.rebirthCount;
+            const savedRebirthMultiplier = gameState.rebirthMultiplier;
+            const savedShownTips = [...gameState.shownTips];
+            const savedStats = { totalMoneyEarned: 0, hasSoldProduce: false, harvested: {}, planted: {}, mutationsHarvested: {} };
+
+            gameState = createInitialGameState(false);
+            gameState.achievements = savedAchievements;
+            gameState.rebirthCount = savedRebirthCount;
+            gameState.rebirthMultiplier = savedRebirthMultiplier;
+            gameState.shownTips = savedShownTips;
+            gameState.stats = savedStats;
+            // Extra starting slots from rebirth
+            const extraSlots = savedRebirthCount;
+            gameState.totalPlots = INITIAL_PLOTS + extraSlots;
+            gameState.plots = [];
+            for (let i = 0; i < gameState.totalPlots; i++) gameState.plots.push({ id: i, state: 'empty', crop: null, plantedTime: null, growDuration: null, specialStatuses: [], finalWeightMultiplier: null, isLocked: false });
+
+            addMessage(`\ud83d\udd04 REBIRTH #${savedRebirthCount}! Sell multiplier is now ${savedRebirthMultiplier.toFixed(2)}x! Starting with ${gameState.totalPlots} plots!`, 'gold', true);
+            refreshShopStock();
+            generateNewDailyQuests();
+            checkAllAchievements();
+            updateUI();
+        };
+
+        const harvestCrop = (id, isBulkHarvest = false) => {
+            if (!gameState || id < 0 || id >= gameState.plots.length) return false;
+            const p = gameState.plots[id];
+            if (!p || p.state !== 'ready') { if (p.state !== 'empty' && !isBulkHarvest) addMessage("Crop not ready.", 'error', true); return false; }
+
+            const plantedKey = p.crop;
+            const plantedInfo = CROP_DATA[plantedKey];
+            const specialStatuses = p.specialStatuses || [];
+            const finalWeightMultiplier = p.finalWeightMultiplier || 1.0;
+            const totalHarvestsBefore = Object.values(gameState.stats.harvested).reduce((a, b) => a + b, 0);
+
+            let displayPrefix = "";
+            specialStatuses.forEach(sKey => { displayPrefix += SPECIAL_STATUSES[sKey]?.icon ? `${SPECIAL_STATUSES[sKey].icon}` : ''; });
+            displayPrefix = displayPrefix ? displayPrefix + ' ' : '';
+
+            let actualHarvestKey = plantedKey;
+            let harvestDisplay = "";
+            let msgType = 'success';
+            let itemWeightForInventory = finalWeightMultiplier;
+            const inventoryKeyPrefix = specialStatuses.length > 0 ? specialStatuses.sort().join('_') + '_' : "";
+
+            if (!plantedKey || !plantedInfo) {
+                addMessage(`Harvest Error: Unknown crop '${plantedKey}'?`, 'error', true);
+                msgType = 'error';
+                actualHarvestKey = null;
+            } else if (plantedInfo.yields?.length > 0 && specialStatuses.length === 0) {
+                const yieldKey = plantedInfo.yields[Math.floor(Math.random() * plantedInfo.yields.length)];
+                const yieldInfo = CROP_DATA[yieldKey];
+                if (yieldInfo && yieldInfo.sellPrice !== null) {
+                    actualHarvestKey = yieldKey;
+                    itemWeightForInventory = getRandomWeight(yieldInfo.weightRange);
+                    const produceInvKey = `${inventoryKeyPrefix}${yieldKey}`;
+                    if (!gameState.inventory.produce[produceInvKey]) gameState.inventory.produce[produceInvKey] = { count: 0, totalWeight: 0.0, isFavorited: false };
+                    gameState.inventory.produce[produceInvKey].count++;
+                    gameState.inventory.produce[produceInvKey].totalWeight += itemWeightForInventory;
+                    harvestDisplay = `1 ${displayPrefix}${yieldInfo.icon} ${yieldInfo.name} (W: ${itemWeightForInventory.toFixed(2)}) from ${plantedInfo.icon}`;
+                } else {
+                    harvestDisplay = `Unknown/unsellable yield from ${plantedInfo.icon}`; msgType = 'error'; actualHarvestKey = null;
+                }
+            } else {
+                let baseHarvestKeyForInv = plantedKey;
+                let baseHarvestInfo = plantedInfo;
+
+                if (plantedInfo.yields?.length > 0 && specialStatuses.length > 0) {
+                    const yieldKey = plantedInfo.yields[Math.floor(Math.random() * plantedInfo.yields.length)];
+                    baseHarvestInfo = CROP_DATA[yieldKey];
+                    baseHarvestKeyForInv = yieldKey;
+                    itemWeightForInventory = getRandomWeight(baseHarvestInfo.weightRange);
+                    harvestDisplay = `1 ${displayPrefix}${baseHarvestInfo.icon} ${baseHarvestInfo.name} (W: ${itemWeightForInventory.toFixed(2)}) from ${plantedInfo.icon}`;
+                } else if (plantedInfo.sellPrice !== null) {
+                    itemWeightForInventory = finalWeightMultiplier;
+                    harvestDisplay = `1 ${displayPrefix}${plantedInfo.icon} ${plantedInfo.name} (W: ${itemWeightForInventory.toFixed(2)})`;
+                } else {
+                    harvestDisplay = `${displayPrefix}${plantedInfo.icon} harvested, not storable/sellable.`; msgType = 'info';
+                }
+
+                if (baseHarvestInfo.sellPrice !== null) {
+                    actualHarvestKey = baseHarvestKeyForInv;
+                    const produceInvKey = `${inventoryKeyPrefix}${baseHarvestKeyForInv}`;
+                    if (!gameState.inventory.produce[produceInvKey]) gameState.inventory.produce[produceInvKey] = { count: 0, totalWeight: 0.0, isFavorited: false };
+                    gameState.inventory.produce[produceInvKey].count++;
+                    gameState.inventory.produce[produceInvKey].totalWeight += itemWeightForInventory;
+                } else if (!plantedInfo.yields) {
+                    actualHarvestKey = null;
+                }
+            }
+            if (specialStatuses.some(s => ['golden', 'cosmic', 'rainbow', 'moonlit', 'pollinated'].includes(s))) msgType = 'gold';
+
+            p.state = 'empty'; p.crop = null; p.plantedTime = null; p.growDuration = null; p.specialStatuses = []; p.finalWeightMultiplier = null;
+
+            if (!isBulkHarvest && harvestDisplay) addMessage(`Harvested ${harvestDisplay}.`, msgType);
+
+            if (actualHarvestKey && CROP_DATA[actualHarvestKey]) {
+                if (gameState.stats.harvested[actualHarvestKey] === undefined) gameState.stats.harvested[actualHarvestKey] = 0;
+                gameState.stats.harvested[actualHarvestKey]++;
+                updateQuestProgress('harvest', 1, actualHarvestKey);
+                if (specialStatuses.includes('golden')) updateQuestProgress('harvest_golden', 1);
+
+                // Check for new mutation achievements
+                if (specialStatuses.includes('rainbow')) {
+                    gameState.stats.mutationsHarvested.rainbow = (gameState.stats.mutationsHarvested.rainbow || 0) + 1;
+                    checkAndGrantAchievement('harvest_rainbow');
+                }
+                if (specialStatuses.includes('cosmic')) {
+                    gameState.stats.mutationsHarvested.cosmic = (gameState.stats.mutationsHarvested.cosmic || 0) + 1;
+                    checkAndGrantAchievement('harvest_cosmic');
+                }
+                if (specialStatuses.includes('silver')) {
+                    gameState.stats.mutationsHarvested.silver = (gameState.stats.mutationsHarvested.silver || 0) + 1;
+                    checkAndGrantAchievement('harvest_silver');
+                }
+            }
+
+            if (!isBulkHarvest) checkAllAchievements(); if (!isBulkHarvest) { const el = farmGridEl.querySelector(`.plot[data-plot-id="${id}"]`); if (el) { el.classList.add('plot-harvest-animate'); setTimeout(() => el.classList.remove('plot-harvest-animate'), 250); } updateUI(); } return true;
+        }
+
+        const harvestAllReadyCrops = () => { if (!gameState) return; let harvestedCount = 0; gameState.plots.forEach((p, i) => { if (p.state === 'ready' && !p.isLocked && harvestCrop(i, true)) harvestedCount++; }); if (harvestedCount > 0) { checkAllAchievements(); addMessage(`Harvested ${harvestedCount} ready crop${harvestedCount > 1 ? 's' : ''}!`, 'success'); updateUI(); } else { addMessage('No unlocked crops ready to harvest.', 'info'); } }
+
+        const sellProduce = (key, qty = 1) => {
+            if (!gameState || qty <= 0) return false;
+
+            const itemData = gameState.inventory.produce[key];
+            if (itemData?.isFavorited) {
+                addMessage(`Cannot sell a ❤ favorited item. Right-click to unfavorite.`, 'error');
+                return false;
+            }
+
+            const hadSoldBefore = gameState.stats.hasSoldProduce;
+            const { baseKey, sellMultiplier, displayPrefix, statusKeys } = parseItemKey(key);
+
+            const baseInfo = CROP_DATA[baseKey];
+            if (!baseInfo || baseInfo.sellPrice === null || !itemData) {
+                addMessage(`Cannot sell ${displayPrefix}${CROP_DATA[baseKey]?.name || baseKey}. Not found or unsellable.`, 'error', true); return false;
+            }
+            if (itemData.count < qty) {
+                addMessage(`Not enough ${displayPrefix}${baseInfo.icon} ${baseInfo.name}.`, 'error', true); return false;
+            }
+
+            const avgWeight = itemData.count > 0 ? (itemData.totalWeight / itemData.count) : 1.0;
+            let finalSellPrice = baseInfo.sellPrice * avgWeight * sellMultiplier * (gameState.rebirthMultiplier || 1.0);
+
+            const rawTotalEarnings = finalSellPrice * qty;
+            const roundedTotalEarnings = Math.ceil(rawTotalEarnings);
+
+            itemData.count -= qty;
+            itemData.totalWeight -= (avgWeight * qty);
+            if (itemData.count <= 0) { itemData.count = 0; itemData.totalWeight = 0.0; }
+
+            if (roundedTotalEarnings > 0) {
+                gameState.money += roundedTotalEarnings;
+                gameState.stats.totalMoneyEarned = (gameState.stats.totalMoneyEarned || 0) + roundedTotalEarnings;
+                updateQuestProgress('earn_money', roundedTotalEarnings);
+            }
+            updateQuestProgress('sell_produce_type', qty, baseKey);
+            updateQuestProgress('sell_any_produce', qty);
+
+            gameState.stats.hasSoldProduce = true;
+            let earningsText = `${roundedTotalEarnings.toFixed(0)}💰`;
+            if (roundedTotalEarnings === 0) earningsText = "no money";
+            if (statusKeys.length > 0 && baseInfo.sellPrice > 0 && roundedTotalEarnings > 0) earningsText += ` (${sellMultiplier.toFixed(1)}x value!)`;
+            const weightText = `(Weight: ${avgWeight.toFixed(2)})`;
+            const messageType = statusKeys.some(s => ['golden', 'cosmic', 'rainbow', 'moonlit', 'pollinated'].includes(s)) && roundedTotalEarnings > 0 ? 'gold' : 'success';
+
+            addMessage(`Sold ${qty} ${displayPrefix}${baseInfo.icon} ${baseInfo.name} ${weightText} for ${earningsText}.`, messageType);
+
+            if (!hadSoldBefore && roundedTotalEarnings > 0) showTip('firstSell', 'First sale! Keep selling for upgrades and seeds.');
+            checkAllAchievements(); updateUI();
+            return true;
+        }
+
+        const sellAllProduce = () => {
+            if (!gameState) return;
+            let itemsSoldCount = 0;
+            let anySaleFailed = false;
+
+            const produceToConsider = Object.keys(gameState.inventory.produce);
+
+            produceToConsider.forEach(itemKey => {
+                const itemData = gameState.inventory.produce[itemKey];
+                if (itemData && itemData.count > 0 && !itemData.isFavorited) {
+                    if (sellProduce(itemKey, itemData.count)) {
+                        itemsSoldCount++;
+                    } else {
+                        anySaleFailed = true;
+                    }
+                }
+            });
+
+            if (itemsSoldCount > 0) {
+                addMessage(`Attempted to sell all unfavorited produce. ${itemsSoldCount} item type(s) sold.`, 'info');
+            } else if (!anySaleFailed) {
+                addMessage("No unfavorited produce to sell.", 'info');
+            }
+            updateUI();
+        }
+
+
+        const buySeeds = (key, qty = 1) => { if (!gameState || qty <= 0) return; const info = CROP_DATA[key]; if (!info || info.seedCost === null) { addMessage(`Cannot buy seeds for ${info?.name || key}.`, 'error', true); return; } const cost = info.seedCost * qty; if (cost > 0 && gameState.money < cost) { addMessage(`Not enough money. Need ${cost}💰.`, 'error', true); return; } if (cost > 0) gameState.money -= cost; gameState.inventory.seeds[key] = (gameState.inventory.seeds[key] || 0) + qty; const costText = cost === 0 ? "free" : `${cost}💰`; addMessage(`Bought ${qty} ${info.icon} ${info.name} seed${qty > 1 ? 's' : ''} for ${costText}.`, 'success'); updateUI(); }
+        const buyPlot = () => { if (!gameState) return; if (gameState.totalPlots >= MAX_PLOTS) { addMessage("Max plots reached!", 'error', true); return; } const cost = calculatePlotCost(); if (gameState.money < cost) { addMessage(`Not enough money. Need ${cost}💰.`, 'error', true); return; } gameState.money -= cost; gameState.totalPlots++; gameState.plots.push({ id: gameState.plots.length, state: 'empty', crop: null, plantedTime: null, growDuration: null, specialStatuses: [], finalWeightMultiplier: null }); addMessage(`Bought plot ${gameState.totalPlots} for ${cost}💰!`, 'success'); checkAllAchievements(); updateUI(); }
+        const buyGrowthUpgrade = () => { if (!gameState) return; if (gameState.growthSpeedLevel >= MAX_GROWTH_LEVELS) { addMessage("Max growth speed!", 'error', true); return; } const cost = calculateGrowthUpgradeCost(); if (gameState.money < cost) { addMessage(`Not enough money. Need ${cost}💰.`, 'error', true); return; } gameState.money -= cost; gameState.growthSpeedLevel++; addMessage(`Growth speed Lvl ${gameState.growthSpeedLevel}! Crops grow ${((1 - calculateGrowthMultiplier()) * 100).toFixed(0)}% faster.`, 'success'); checkAllAchievements(); updateUI(); }
+
+        const getPlantableCropsSorted = () => {
+            return Object.keys(CROP_DATA)
+                .filter(k => CROP_DATA[k].seedCost !== null)
+                .sort((a, b) => {
+                    const cropA = CROP_DATA[a];
+                    const cropB = CROP_DATA[b];
+                    const costA = cropA.seedCost ?? Infinity;
+                    const costB = cropB.seedCost ?? Infinity;
+                    if (costA === costB) {
+                        return (cropA.name || a).localeCompare(cropB.name || b);
+                    }
+                    return costA - costB;
+                });
+        };
+
+        const refreshShopStock = () => {
+            if (!gameState) return;
+
+            const allPlantableSorted = getPlantableCropsSorted();
+            if (allPlantableSorted.length === 0) {
+                gameState.shopCurrentlyAvailableSeedKeys = [];
+                gameState.shopNextRefreshTimestamp = Date.now() + getRandomDuration([SHOP_REFRESH_MIN, SHOP_REFRESH_MAX]);
+                addMessage("🛒 Shop has no seeds to stock currently.", 'info');
+                updateUI();
+                return;
+            }
+
+            let finalStock = [];
+
+            const ultraRareCandidates = allPlantableSorted.filter(k => CROP_DATA[k].rarity === 'ultra_rare');
+            const commonPool = allPlantableSorted.filter(k => (!CROP_DATA[k].rarity || CROP_DATA[k].rarity === 'common') && !ultraRareCandidates.includes(k));
+            const normalRarePool = allPlantableSorted.filter(k => CROP_DATA[k].rarity === 'rare' && !ultraRareCandidates.includes(k));
+
+            const alwaysAvailableItems = commonPool.slice(0, ALWAYS_AVAILABLE_SHOP_ITEMS);
+            finalStock.push(...alwaysAvailableItems);
+
+            let ultraRaresStockedCount = 0;
+            const shuffledUltraRare = shuffleArray([...ultraRareCandidates]);
+            for (const key of shuffledUltraRare) {
+                if (ultraRaresStockedCount < ULTRA_RARE_SLOTS_IN_SHOP) {
+                    if (Math.random() < (CROP_DATA[key].stockChance || 0.20)) {
+                        if (!finalStock.includes(key)) {
+                            finalStock.push(key);
+                            ultraRaresStockedCount++;
+                        }
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            let rotatingPoolCandidates = [
+                ...normalRarePool,
+                ...commonPool.filter(k => !alwaysAvailableItems.includes(k))
+            ];
+            rotatingPoolCandidates = rotatingPoolCandidates.filter(k => !finalStock.includes(k));
+            shuffleArray(rotatingPoolCandidates);
+
+            const slotsForNormalRotation = NORMAL_RARE_ROTATING_SLOTS;
+            let normalRotatingStockedCount = 0;
+
+            for (const key of rotatingPoolCandidates) {
+                if (normalRotatingStockedCount < slotsForNormalRotation) {
+                    if (!finalStock.includes(key)) {
+                        finalStock.push(key);
+                        normalRotatingStockedCount++;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            gameState.shopCurrentlyAvailableSeedKeys = [...new Set(finalStock)];
+
+            // Force-add event crops that are active during current weather
+            if (gameState.currentWeather) {
+                Object.keys(CROP_DATA).forEach(k => {
+                    const c = CROP_DATA[k];
+                    if (c.eventWeather === gameState.currentWeather && c.seedCost !== null && !gameState.shopCurrentlyAvailableSeedKeys.includes(k)) {
+                        gameState.shopCurrentlyAvailableSeedKeys.push(k);
+                    }
+                });
+            }
+
+            gameState.shopNextRefreshTimestamp = Date.now() + getRandomDuration([SHOP_REFRESH_MIN, SHOP_REFRESH_MAX]);
+
+            addMessage("🛒 Shop has restocked its seeds!", 'info');
+            updateUI();
+        };
+
+
+        const validateAndRefreshShopStock = () => {
+            if (!gameState) return;
+            let needsRefresh = false;
+            if (Date.now() >= gameState.shopNextRefreshTimestamp) {
+                needsRefresh = true;
+            } else {
+                const validKeys = gameState.shopCurrentlyAvailableSeedKeys.filter(key =>
+                    CROP_DATA[key] && CROP_DATA[key].seedCost !== null
+                );
+                if (validKeys.length !== gameState.shopCurrentlyAvailableSeedKeys.length) {
+                    needsRefresh = true;
+                }
+                gameState.shopCurrentlyAvailableSeedKeys = validKeys;
+            }
+
+            if (needsRefresh) {
+                refreshShopStock();
+            } else {
+                updateUI(); // Update UI even if not refreshed, for timer
+            }
+        };
+
+        const getStartOfUTCDay = (timestamp) => {
+            const d = new Date(timestamp);
+            d.setUTCHours(0, 0, 0, 0);
+            return d.getTime();
+        };
+
+        const checkAndResetDailyQuests = () => {
+            if (!gameState || isModActive) return;
+            const now = Date.now();
+            const currentDayStart = getStartOfUTCDay(now);
+            const lastResetDayStart = getStartOfUTCDay(gameState.lastQuestResetTimestamp);
+
+            if (currentDayStart > lastResetDayStart) {
+                generateNewDailyQuests();
+            } else if (!gameState.activeDailyQuests || gameState.activeDailyQuests.length === 0) {
+                generateNewDailyQuests();
+            }
+        };
+
+        const generateNewDailyQuests = (count = DAILY_QUEST_COUNT) => {
+            if (!gameState || isModActive) return;
+
+            const oldClaimableQuests = gameState.activeDailyQuests.filter(q => q.completed && !q.claimed);
+            gameState.activeDailyQuests = oldClaimableQuests;
+
+            const availableQuestDefs = QUEST_DEFINITIONS.filter(def =>
+                !gameState.activeDailyQuests.some(aq => aq.questId === def.id)
+            );
+            shuffleArray(availableQuestDefs);
+
+            const newQuestsNeeded = Math.max(0, count - gameState.activeDailyQuests.length);
+
+            for (let i = 0; i < newQuestsNeeded && i < availableQuestDefs.length; i++) {
+                const questDef = availableQuestDefs[i];
+                gameState.activeDailyQuests.push({
+                    questId: questDef.id,
+                    progress: 0,
+                    completed: false,
+                    claimed: false
+                });
+            }
+            gameState.lastQuestResetTimestamp = Date.now();
+            addMessage("📅 New Daily Quests available!", 'info');
+            updateUI();
+        };
+
+        const updateQuestProgress = (actionType, value, targetKey = null) => {
+            if (!gameState || !gameState.activeDailyQuests || isModActive) return;
+            let questsUpdated = false;
+
+            gameState.activeDailyQuests.forEach(quest => {
+                if (quest.completed && !quest.claimed) return;
+                if (quest.claimed) return;
+
+                const questDef = QUEST_DEFINITIONS.find(qd => qd.id === quest.questId);
+                if (!questDef) return;
+
+                let progressMade = false;
+                switch (questDef.type) {
+                    case 'harvest': if (actionType === 'harvest' && questDef.targetCrop === targetKey) { quest.progress = Math.min(quest.progress + value, questDef.targetAmount); progressMade = true; } break;
+                    case 'harvest_golden': if (actionType === 'harvest_golden') { quest.progress = Math.min(quest.progress + value, questDef.targetAmount); progressMade = true; } break;
+                    case 'plant': if (actionType === 'plant' && questDef.targetCrop === targetKey) { quest.progress = Math.min(quest.progress + value, questDef.targetAmount); progressMade = true; } break;
+                    case 'plant_any': if (actionType === 'plant_any') { quest.progress = Math.min(quest.progress + value, questDef.targetAmount); progressMade = true; } break;
+                    case 'earn_money': if (actionType === 'earn_money') { quest.progress = Math.min(quest.progress + value, questDef.targetAmount); progressMade = true; } break;
+                    case 'sell_produce_type': if (actionType === 'sell_produce_type' && questDef.targetCrop === targetKey) { quest.progress = Math.min(quest.progress + value, questDef.targetAmount); progressMade = true; } break;
+                    case 'sell_any_produce': if (actionType === 'sell_any_produce') { quest.progress = Math.min(quest.progress + value, questDef.targetAmount); progressMade = true; } break;
+                }
+
+                if (progressMade && quest.progress >= questDef.targetAmount && !quest.completed) {
+                    quest.completed = true;
+                    addMessage(`Quest Completed: ${questDef.title}! Claim your reward.`, 'success', true);
+                    questsUpdated = true;
+                } else if (progressMade) {
+                    questsUpdated = true;
+                }
+            });
+
+            if (questsUpdated) updateUI();
+        };
+
+        const claimQuestReward = (questArrayIndex) => {
+            if (!gameState || !gameState.activeDailyQuests[questArrayIndex] || isModActive) return;
+            const quest = gameState.activeDailyQuests[questArrayIndex];
+            const questDef = QUEST_DEFINITIONS.find(qd => qd.id === quest.questId);
+
+            if (!questDef || !quest.completed || quest.claimed) {
+                addMessage("Cannot claim reward for this quest.", 'error', true);
+                return;
+            }
+
+            let rewardMessage = `Claimed reward for "${questDef.title}": `;
+            if (questDef.rewards.money) {
+                gameState.money += questDef.rewards.money;
+                rewardMessage += `${questDef.rewards.money}💰 `;
+            }
+            if (questDef.rewards.seeds) {
+                Object.entries(questDef.rewards.seeds).forEach(([seedKey, amount]) => {
+                    if (CROP_DATA[seedKey] && CROP_DATA[seedKey].seedCost !== null) {
+                        gameState.inventory.seeds[seedKey] = (gameState.inventory.seeds[seedKey] || 0) + amount;
+                        rewardMessage += `+${amount} ${CROP_DATA[seedKey].icon} `;
+                    }
+                });
+            }
+            quest.claimed = true;
+            addMessage(rewardMessage, 'success');
+            updateUI();
+        };
+
+        const changeWeather = () => {
+            if (!gameState) return;
+            const possibleNextWeathers = WEATHER_TYPE_KEYS.filter(w => w !== gameState.currentWeather);
+            const nextWeatherKey = possibleNextWeathers[Math.floor(Math.random() * possibleNextWeathers.length)];
+
+            // Remove event crops from previous weather
+            if (gameState.currentWeather) {
+                Object.keys(CROP_DATA).forEach(k => {
+                    if (CROP_DATA[k].eventWeather && CROP_DATA[k].eventWeather !== nextWeatherKey) {
+                        const idx = gameState.shopCurrentlyAvailableSeedKeys.indexOf(k);
+                        if (idx > -1) gameState.shopCurrentlyAvailableSeedKeys.splice(idx, 1);
+                    }
+                });
+            }
+
+            gameState.currentWeather = nextWeatherKey;
+            const weatherConf = WEATHER_CONFIG[nextWeatherKey];
+            gameState.weatherChangeTimestamp = Date.now() + getRandomDuration(weatherConf.duration_ms);
+
+            // Add event crops for new weather
+            Object.keys(CROP_DATA).forEach(k => {
+                const c = CROP_DATA[k];
+                if (c.eventWeather === nextWeatherKey && c.seedCost !== null && !gameState.shopCurrentlyAvailableSeedKeys.includes(k)) {
+                    gameState.shopCurrentlyAvailableSeedKeys.push(k);
+                }
+            });
+
+            addMessage(`Weather changed to: ${weatherConf.icon} ${weatherConf.name}!`, 'info', true);
+            updateUI();
+        };
+
+        const gameLoop = () => {
+            if (!gameState) return;
+            const now = Date.now();
+            let needsUpdate = false;
+
+            if (now >= gameState.weatherChangeTimestamp) {
+                changeWeather();
+                needsUpdate = true;
+            }
+
+            gameState.plots.forEach(p => {
+                if (p.state === 'growing' && p.plantedTime && p.growDuration) {
+                    let environmentalSpeedBoost = 1.0;
+                    if (gameState.currentWeather === 'gentle_rain' && WEATHER_CONFIG.gentle_rain.growthModifier) {
+                        environmentalSpeedBoost = WEATHER_CONFIG.gentle_rain.growthModifier;
+                    }
+                    const effectiveGrowDuration = p.growDuration / environmentalSpeedBoost;
+                    const timeElapsed = now - p.plantedTime;
+
+                    if (timeElapsed >= effectiveGrowDuration) {
+                        p.state = 'ready';
+                        p.plantedTime = null;
+                        needsUpdate = true;
+                        const cropInfo = CROP_DATA[p.crop];
+                        let readyMsg = `${cropInfo ? cropInfo.icon : '?'} ${cropInfo ? cropInfo.name : 'Crop'} in plot ${p.id + 1} ready!`;
+                        if (p.specialStatuses.length > 0) {
+                            const iconPrefix = p.specialStatuses.map(s => SPECIAL_STATUSES[s]?.icon || '').join('');
+                            readyMsg = `${iconPrefix}${readyMsg}`;
+                        }
+                        addMessage(readyMsg, 'info');
+                    }
+                }
+            });
+            gameState.lastUpdate = now;
+
+            if (shopRefreshTimerEl) {
+                const timeLeft = Math.max(0, gameState.shopNextRefreshTimestamp - now);
+                shopRefreshTimerEl.textContent = `(Refreshes in: ${formatTime(timeLeft)})`;
+            }
+            if (now >= gameState.shopNextRefreshTimestamp) {
+                refreshShopStock();
+                needsUpdate = true;
+            }
+
+            if (!isModActive) {
+                checkAndResetDailyQuests();
+                if (questResetTimerEl) {
+                    const nextReset = getStartOfUTCDay(now) + (24 * 60 * 60 * 1000);
+                    const timeLeftForQuestReset = Math.max(0, nextReset - now);
+                    questResetTimerEl.textContent = `(Resets in: ${formatTime(timeLeftForQuestReset, false)})`;
+                }
+                if (questStatusTextEl) questStatusTextEl.textContent = "";
+            } else {
+                if (questResetTimerEl) questResetTimerEl.textContent = "";
+                if (questStatusTextEl) questStatusTextEl.textContent = "(Disabled with active mod)";
+            }
+
+            const totalHarvests = Object.values(gameState.stats.harvested).reduce((a, b) => a + b, 0); if (gameState.money >= 20 && totalHarvests >= 1 && !gameState.stats.hasSoldProduce) showTip('checkMarket', 'Got produce? Check Shop 🛒 to sell, buy seeds, or get upgrades.'); const nextPlotCost = calculatePlotCost(); if (gameState.totalPlots < 5 && gameState.money >= nextPlotCost) showTip('plotUpgradeAfford', `Expand farm! Buy Plot for ${nextPlotCost}💰 in Shop 🛒.`); const nextGrowthCost = calculateGrowthUpgradeCost(); if (gameState.growthSpeedLevel < 2 && gameState.money >= nextGrowthCost && gameState.totalPlots > INITIAL_PLOTS) showTip('growthUpgradeAfford', `Speed up! Improve Growth for ${nextGrowthCost}💰 in Shop 🛒.`);
+
+            if (needsUpdate) updateUI(); else updateProgressBars();
+        }
+        const calculateGrowthProgress = (p) => {
+            if (p?.state !== 'growing' || !p.plantedTime || !p.growDuration) return 0;
+            let environmentalSpeedBoost = 1.0;
+            if (gameState.currentWeather === 'gentle_rain' && WEATHER_CONFIG.gentle_rain.growthModifier) {
+                environmentalSpeedBoost = WEATHER_CONFIG.gentle_rain.growthModifier;
+            }
+            const finalEffectiveGrowDuration = p.growDuration / environmentalSpeedBoost;
+            const timeElapsed = Date.now() - p.plantedTime;
+            return Math.min(1, Math.max(0, timeElapsed / finalEffectiveGrowDuration));
+        };
+
+        const updateProgressBars = () => { farmGridEl?.querySelectorAll('.plot.growing .progress-bar').forEach(bar => { const plotEl = bar.closest('.plot'); const plotId = parseInt(plotEl?.dataset.plotId, 10); if (!isNaN(plotId) && gameState?.plots[plotId]) bar.style.width = `${calculateGrowthProgress(gameState.plots[plotId]) * 100}%`; }); updateActiveTooltip(); }
+
+        const updateActiveTooltip = () => {
+            if (activeTooltipPlotId !== null && gameState && plotTooltipEl.classList.contains('visible')) {
+                const plotData = gameState.plots[activeTooltipPlotId];
+                if (plotData && (plotData.state === 'growing' || plotData.state === 'ready') && plotData.crop) {
+                    const cropInfo = CROP_DATA[plotData.crop];
+                    const specialStatuses = plotData.specialStatuses || [];
+                    let cropNamePrefix = "";
+
+                    if (specialStatuses.length > 0) {
+                        cropNamePrefix = specialStatuses.map(sKey => {
+                            const statusInfo = SPECIAL_STATUSES[sKey];
+                            return statusInfo ? `${statusInfo.icon} ${statusInfo.name}` : '';
+                        }).filter(Boolean).join(', ') + ' ';
+                    }
+                    tooltipCropNameEl.textContent = `${cropNamePrefix}${cropInfo?.name || 'Unknown'}`;
+
+                    if (plotData.state === 'ready') {
+                        tooltipTimeLeftEl.textContent = 'Ready to Harvest!';
+                    } else {
+                        tooltipTimeLeftEl.textContent = `Time Left: ${getFormattedTimeLeft(plotData) || 'Almost done!'}`;
+                    }
+
+                    if (cropInfo?.weightRange && tooltipWeightPotentialEl) {
+                        tooltipWeightPotentialEl.textContent = `Potential: ${cropInfo.weightRange[0].toFixed(1)}x - ${cropInfo.weightRange[1].toFixed(1)}x`;
+                        tooltipWeightPotentialEl.style.display = 'inline-block';
+                    } else if (tooltipWeightPotentialEl) {
+                        tooltipWeightPotentialEl.style.display = 'none';
+                    }
+
+                    if (plotData.finalWeightMultiplier && tooltipWeightActualEl) {
+                        const progress = calculateGrowthProgress(plotData);
+                        let currentVisualWeightText = "Growing...";
+                        let finalWeightText = ` (Final: ${plotData.finalWeightMultiplier.toFixed(2)}x)`;
+
+                        if (plotData.state === 'ready') {
+                            currentVisualWeightText = `Final Weight: ${plotData.finalWeightMultiplier.toFixed(2)}x`;
+                            finalWeightText = '';
+                        } else if (progress >= 0.66) {
+                            currentVisualWeightText = `Maturing ~${(plotData.finalWeightMultiplier * 2 / 3).toFixed(2)}x`;
+                        } else if (progress >= 0.33) {
+                            currentVisualWeightText = `Growing ~${(plotData.finalWeightMultiplier / 3).toFixed(2)}x`;
+                        }
+                        tooltipWeightActualEl.textContent = `Weight: ${currentVisualWeightText}${finalWeightText}`;
+                        tooltipWeightActualEl.style.display = 'inline-block';
+                    } else if (tooltipWeightActualEl) {
+                        tooltipWeightActualEl.style.display = 'none';
+                    }
+
+                    // Show sell multiplier from statuses
+                    if (tooltipSellMultiplierEl && specialStatuses.length > 0) {
+                        let totalMultiplier = 1;
+                        specialStatuses.forEach(sKey => { totalMultiplier *= (SPECIAL_STATUSES[sKey]?.sellMultiplier || 1); });
+                        if (totalMultiplier > 1) {
+                            tooltipSellMultiplierEl.textContent = `💰 Sell Bonus: ${totalMultiplier.toFixed(1)}x`;
+                            tooltipSellMultiplierEl.style.display = 'inline-block';
+                        } else {
+                            tooltipSellMultiplierEl.style.display = 'none';
+                        }
+                    } else if (tooltipSellMultiplierEl) {
+                        tooltipSellMultiplierEl.style.display = 'none';
+                    }
+
+                } else {
+                    hidePlotTooltip();
+                }
+            }
+        }
+        const showPlotTooltip = (plotId, event) => { if (!gameState || !plotTooltipEl) return; const plotData = gameState.plots[plotId]; if (!plotData || (plotData.state !== 'growing' && plotData.state !== 'ready')) { hidePlotTooltip(); return; } activeTooltipPlotId = plotId; updateActiveTooltip(); movePlotTooltip(event); plotTooltipEl.classList.add('visible'); }
+        const hidePlotTooltip = () => { if (plotTooltipEl) plotTooltipEl.classList.remove('visible'); if (tooltipWeightPotentialEl) tooltipWeightPotentialEl.style.display = 'none'; if (tooltipWeightActualEl) tooltipWeightActualEl.style.display = 'none'; if (tooltipSellMultiplierEl) tooltipSellMultiplierEl.style.display = 'none'; activeTooltipPlotId = null; }
+        const movePlotTooltip = (event) => { if (!plotTooltipEl?.classList.contains('visible')) return; const offsetX = 15, offsetY = 10; let x = event.clientX + offsetX, y = event.clientY + offsetY; const tooltipRect = plotTooltipEl.getBoundingClientRect(), bodyRect = document.body.getBoundingClientRect(); if (x + tooltipRect.width > bodyRect.width) x = event.clientX - tooltipRect.width - offsetX; if (y + tooltipRect.height > bodyRect.height) y = event.clientY - tooltipRect.height - offsetY; plotTooltipEl.style.left = `${x}px`; plotTooltipEl.style.top = `${y}px`; }
+
+        const toggleFavoriteProduce = (itemKey) => {
+            if (gameState && gameState.inventory.produce[itemKey]) {
+                const item = gameState.inventory.produce[itemKey];
+                item.isFavorited = !item.isFavorited;
+                updateUI();
+            }
+        };
+
+        let uiUpdateTimeout = null;
+        let lastUpdateTime = 0;
+        const updateUI = () => {
+            const now = Date.now();
+            if (now - lastUpdateTime < 50) {
+                if (!uiUpdateTimeout) uiUpdateTimeout = setTimeout(() => { uiUpdateTimeout = null; updateUI(); }, 50 - (now - lastUpdateTime));
+                return;
+            }
+            lastUpdateTime = now;
+            if (!gameState) { console.error("UI Update Fail: No game state."); return; }
+            moneyEl.textContent = gameState.money;
+
+            if (weatherDisplayEl) {
+                let weatherText = "";
+                if (WEATHER_CONFIG[gameState.currentWeather]) {
+                    const weatherInfo = WEATHER_CONFIG[gameState.currentWeather];
+                    weatherText = `Weather: ${weatherInfo.icon} ${weatherInfo.name}`;
+                } else {
+                    weatherText = "Weather: Unknown";
+                }
+                weatherDisplayEl.innerHTML = weatherText;
+            }
+
+
+            const generateInventoryList = (items, type) => {
+                return Object.entries(items)
+                    .map(([key, data]) => {
+                        const { baseKey, displayPrefix } = parseItemKey(key);
+                        const baseItemInfo = CROP_DATA[baseKey];
+                        let name = baseItemInfo?.name || baseKey;
+                        let icon = baseItemInfo?.icon || '?';
+
+                        if (type === 'seeds' && (data <= 0 || baseItemInfo?.seedCost === null)) return null;
+                        if (type === 'produce' && (data.count <= 0 || (baseItemInfo?.sellPrice === null && !baseItemInfo?.yields))) return null;
+
+                        return { key, data, name, icon, displayPrefix, baseKey };
+                    })
+                    .filter(item => item)
+                    .sort((a, b) => {
+                        const nC = a.name.localeCompare(b.name);
+                        if (nC !== 0) return nC;
+                        return a.key.localeCompare(b.key); // Sort by full key for consistent status ordering
+                    })
+                    .map(item => {
+                        const isFavorited = type === 'produce' && item.data.isFavorited;
+                        let text = `<li data-item-key="${item.key}" title="${type === 'produce' ? 'Right-click to toggle favorite' : ''}">`;
+                        if (isFavorited) {
+                            text += '<span class="favorite-icon">❤</span>';
+                        }
+                        text += `<span class="inventory-item-icon">${item.displayPrefix}${item.icon}</span> ${item.name}: `;
+                        if (type === 'seeds') { text += item.data; }
+                        else { text += item.data.count; if (item.data.count > 0 && item.data.totalWeight) { text += `<span class="inventory-weight">(Weight: ${(item.data.totalWeight / item.data.count).toFixed(2)})</span>`; } }
+                        text += `</li>`;
+                        return text;
+                    }).join('') || `<li>(No ${type})</li>`;
+            };
+
+            seedInventoryEl.innerHTML = generateInventoryList(gameState.inventory.seeds, 'seeds');
+            produceInventoryEl.innerHTML = generateInventoryList(gameState.inventory.produce, 'produce');
+
+            let anyPlotsReady = false; farmGridEl.innerHTML = ''; for (let i = 0; i < MAX_PLOTS; i++) {
+                const plotEl = document.createElement('div'); plotEl.classList.add('plot'); plotEl.dataset.plotId = i; const content = document.createElement('span'); content.classList.add('plot-content'); if (i < gameState.totalPlots) {
+                    const plotData = gameState.plots[i]; if (!plotData) { console.error(`Plot data error ${i}`); content.innerHTML = '❓'; plotEl.classList.add('empty'); } else {
+                        const cropInfo = CROP_DATA[plotData.crop]; plotEl.className = 'plot'; plotEl.classList.add(plotData.state);
+                        const specialStatuses = plotData.specialStatuses || [];
+                        if (plotData.state === 'growing' || plotData.state === 'ready') {
+                            if (specialStatuses.includes('moonlit')) plotEl.classList.add('plot-is-moonlit');
+                            if (specialStatuses.includes('scorched')) plotEl.classList.add('plot-is-scorched');
+                            if (specialStatuses.includes('golden') || specialStatuses.includes('pollinated')) plotEl.classList.add('plot-is-warm');
+                            if (specialStatuses.includes('frozen') || specialStatuses.includes('wet')) plotEl.classList.add('plot-is-cool');
+                            if (specialStatuses.includes('shocked')) plotEl.classList.add('plot-is-shocked');
+                            if (specialStatuses.includes('rainbow')) plotEl.classList.add('plot-is-rainbow');
+                            if (specialStatuses.includes('cosmic')) plotEl.classList.add('plot-is-cosmic');
+                            if (specialStatuses.includes('silver')) plotEl.classList.add('plot-is-silver');
+                            if (plotData.isLocked) plotEl.classList.add('plot-fruit-locked');
+                        }
+                        let iconPrefix = "";
+                        specialStatuses.forEach(sKey => iconPrefix += SPECIAL_STATUSES[sKey]?.icon || '');
+                        let displayIcon = `${iconPrefix}${cropInfo?.icon || '?'}`;
+
+                        if (specialStatuses.length > 0) {
+                            content.classList.add('status-icon-present');
+                        } else {
+                            content.classList.remove('status-icon-present');
+                        }
+
+                        switch (plotData.state) { case 'empty': content.innerHTML = '🟫'; plotEl.onclick = () => plantCrop(i); plotEl.oncontextmenu = (e) => { e.preventDefault(); plantAllSelectedSeed(); }; break; case 'growing': content.innerHTML = displayIcon; const pBar = document.createElement('div'); pBar.className = 'progress-bar'; pBar.style.width = `${calculateGrowthProgress(plotData) * 100}%`; plotEl.appendChild(pBar); plotEl.onclick = () => addMessage(`${cropInfo?.icon || '?'} ${cropInfo?.name || 'Crop'} is growing...`); plotEl.oncontextmenu = (e) => { e.preventDefault(); togglePlotLock(i); }; break; case 'ready': anyPlotsReady = true; content.innerHTML = displayIcon; plotEl.onclick = () => harvestCrop(i); plotEl.oncontextmenu = (e) => { e.preventDefault(); togglePlotLock(i); }; break; default: content.innerHTML = '❓'; }
+                    }
+                } else { plotEl.classList.add('locked'); content.innerHTML = '🔒'; } plotEl.appendChild(content); farmGridEl.appendChild(plotEl);
+            } harvestAllButtonEl.disabled = !anyPlotsReady;
+            if (plantAllButtonEl) { plantAllButtonEl.disabled = !gameState.selectedCropToPlant || !(gameState.inventory.seeds[gameState.selectedCropToPlant] > 0) || !gameState.plots.some(p => p.state === 'empty'); }
+
+            const plantableCropsOverall = getPlantableCropsSorted();
+            plantingOptionsEl.innerHTML = plantableCropsOverall.map(k => { const c = CROP_DATA[k], cS = gameState.inventory.seeds[k] ?? 0, iS = gameState.selectedCropToPlant === k, hS = cS > 0; return `<button class="plant-button${iS ? ' selected-plant-button' : ''}" onclick="selectCropToPlant('${k}')"${!hS ? ' disabled title="No seeds available"' : ''}>Plant ${c.icon} (${cS})</button>`; }).join('');
+
+            buySeedsEl.innerHTML = plantableCropsOverall.map(k => {
+                const c = CROP_DATA[k];
+                if (!c || c.seedCost === null) return '';
+
+                const co = c.seedCost;
+                const isInStock = gameState.shopCurrentlyAvailableSeedKeys.includes(k);
+                const totalCost = co * purchaseQty;
+                const costText = co === 0 ? "Free" : `${totalCost}💰`;
+
+                if (!isInStock) {
+                    const timeToRefresh = Math.max(0, gameState.shopNextRefreshTimestamp - Date.now());
+                    const titleText = `Out of stock. (Refreshes in: ${formatTime(timeToRefresh)})`;
+                    return `<button class="shop-seed-unavailable" title="${titleText}">Buy ${c.icon} (${costText})</button>`;
+                } else {
+                    const titleText = co === 0 ? "Get for Free" : `Buy ${purchaseQty} for ${totalCost}💰`;
+                    const isDisabled = (co > 0 && gameState.money < totalCost) ? 'disabled' : '';
+                    return `<button onclick="buySeeds('${k}',${purchaseQty})" ${isDisabled} title="${titleText}">Buy ${c.icon} (${costText})</button>`;
+                }
+            }).join('');
+
+            if (plantableCropsOverall.length === 0) {
+                buySeedsEl.innerHTML = '<p style="font-size:.9em;color:var(--log-text-color)">(No seeds defined in game data)</p>';
+            }
+
+            let hasSellableProduce = false;
+            const sellableProduceEntries = Object.entries(gameState.inventory.produce)
+                .map(([key, itemInvData]) => {
+                    const { baseKey, statusKeys, sellMultiplier, displayPrefix } = parseItemKey(key);
+                    const baseItemInfo = CROP_DATA[baseKey];
+                    return { key, count: itemInvData.count, totalWeight: itemInvData.totalWeight, isFavorited: itemInvData.isFavorited, baseKey, statusKeys, sellMultiplier, displayPrefix, name: baseItemInfo?.name || baseKey, icon: baseItemInfo?.icon || '?', sellPrice: baseItemInfo?.sellPrice, };
+                })
+                .filter(item => item.count > 0 && item.sellPrice !== null)
+                .sort((a, b) => {
+                    const nC = a.name.localeCompare(b.name);
+                    if (nC !== 0) return nC;
+                    return a.key.localeCompare(b.key);
+                });
+
+            sellProduceAreaEl.innerHTML = sellableProduceEntries.length > 0 ? sellableProduceEntries.map(item => {
+                hasSellableProduce = true;
+                const avgWeight = item.count > 0 ? (item.totalWeight / item.count) : 1.0;
+                const effectivePricePerItem = (item.sellPrice ?? 0) * avgWeight * item.sellMultiplier;
+                const roundedPricePerItem = Math.ceil(effectivePricePerItem);
+                const priceText = `${roundedPricePerItem.toFixed(0)}💰`;
+                const titleText = roundedPricePerItem === 0 ? "Sell 1 (Worthless)" : `Sell 1 for ${priceText} (Weight: ${avgWeight.toFixed(2)}, Multi: ${item.sellMultiplier.toFixed(1)}x)`;
+                const disabledAttr = item.isFavorited ? 'disabled title="Cannot sell a favorited item."' : `title="${titleText}"`;
+                return `<button onclick="sellProduce('${item.key}',1)" ${disabledAttr}>Sell ${item.isFavorited ? '❤ ' : ''}${item.displayPrefix}${item.icon} (${priceText})</button>`;
+            }).join('') : '<p style="font-size:.9em;color:var(--log-text-color)">(Nothing to sell)</p>';
+
+            sellAllProduceButtonEl.disabled = !sellableProduceEntries.some(item => !item.isFavorited);
+
+            farmUpgradesContainerEl.innerHTML = '<h4>Upgrades:</h4>'; const buyPlotBtn = document.createElement('button'), pCost = calculatePlotCost(); buyPlotBtn.onclick = buyPlot; buyPlotBtn.disabled = gameState.totalPlots >= MAX_PLOTS || gameState.money < pCost; if (gameState.totalPlots >= MAX_PLOTS) { buyPlotBtn.textContent = `Max Plots (${MAX_PLOTS})`; buyPlotBtn.title = "Max plots owned."; } else { buyPlotBtn.innerHTML = `Buy Plot (${gameState.totalPlots}/${MAX_PLOTS}) - ${pCost}💰`; buyPlotBtn.title = `Buy plot ${gameState.totalPlots + 1} for ${pCost}💰`; } farmUpgradesContainerEl.appendChild(buyPlotBtn); const upGrowthBtn = document.createElement('button'), gCost = calculateGrowthUpgradeCost(), cLevel = gameState.growthSpeedLevel, mLevel = MAX_GROWTH_LEVELS; upGrowthBtn.onclick = buyGrowthUpgrade; if (cLevel >= mLevel) { upGrowthBtn.textContent = `Max Growth Speed (${cLevel}/${mLevel})`; upGrowthBtn.disabled = true; upGrowthBtn.title = "Growth speed maxed."; } else { upGrowthBtn.innerHTML = `Improve Growth (${cLevel}/${mLevel}) - ${gCost}💰`; upGrowthBtn.disabled = gameState.money < gCost; upGrowthBtn.title = `Upgrade growth Lvl ${cLevel + 1} for ${gCost}💰`; } farmUpgradesContainerEl.appendChild(upGrowthBtn);
+            achievementsListEl.innerHTML = ''; Object.keys(ACHIEVEMENT_DATA).sort((a, b) => a === 'complete_all' ? 1 : b === 'complete_all' ? -1 : ACHIEVEMENT_DATA[a].name.localeCompare(ACHIEVEMENT_DATA[b].name)).forEach(k => { const aD = ACHIEVEMENT_DATA[k], iC = gameState.achievements[k] === true, li = document.createElement('li'); li.className = iC ? 'completed' : 'incomplete'; li.title = iC ? 'Completed!' : 'Incomplete'; li.dataset.achKey = k; const icon = document.createElement('span'); icon.className = 'ach-icon'; icon.textContent = aD.icon; const details = document.createElement('div'); details.className = 'ach-details'; const name = document.createElement('span'); name.className = 'ach-name'; name.textContent = aD.name; const descRwd = document.createElement('span'); descRwd.className = 'ach-desc-reward'; const desc = document.createElement('span'); desc.className = 'ach-desc'; desc.textContent = aD.desc; descRwd.appendChild(desc); if (aD.rwd > 0 && !iC) { const rwd = document.createElement('span'); rwd.className = 'ach-reward'; rwd.textContent = `Reward: ${aD.rwd}💰`; descRwd.appendChild(rwd) } details.appendChild(name); details.appendChild(descRwd); li.appendChild(icon); li.appendChild(details); achievementsListEl.appendChild(li) }); copyCodeButtonEl.disabled = !saveCodeOutputEl.value || saveCodeOutputEl.value.startsWith('Err') || saveCodeOutputEl.value.startsWith('Load');
+
+            if (isModActive) {
+                dailyQuestsSectionEl.style.display = 'none';
+            } else {
+                dailyQuestsSectionEl.style.display = 'block';
+                dailyQuestsListEl.innerHTML = gameState.activeDailyQuests.map((quest, index) => {
+                    const questDef = QUEST_DEFINITIONS.find(qd => qd.id === quest.questId);
+                    if (!questDef) return '<li>Error: Unknown Quest</li>';
+                    const progressPercent = Math.min(100, (quest.progress / questDef.targetAmount) * 100);
+                    let liClass = ""; if (quest.completed && !quest.claimed) liClass = "quest-completed"; if (quest.claimed) liClass = "quest-claimed";
+                    let rewardStr = "Reward: "; if (questDef.rewards.money) rewardStr += `${questDef.rewards.money}💰 `; if (questDef.rewards.seeds) { rewardStr += Object.entries(questDef.rewards.seeds).map(([key, amt]) => `${amt} ${CROP_DATA[key]?.icon || key}`).join(', '); }
+                    return `<li class="${liClass}"><span class="quest-title">${questDef.title}</span><span class="quest-desc">${questDef.description} (${quest.progress}/${questDef.targetAmount})</span><div class="quest-progress-bar-container"><div class="quest-progress-bar" style="width: ${progressPercent}%"></div></div><span class="quest-reward-text">${rewardStr}</span>${quest.completed && !quest.claimed ? `<button class="quest-claim-button" onclick="claimQuestReward(${index})">Claim</button>` : ''}${quest.claimed ? `<span>(Claimed)</span>` : ''}</li>`;
+                }).join('') || '<li>No active quests. Check back later!</li>';
+            }
+
+            // Rebirth Section
+            if (rebirthContentEl) {
+                const rc = gameState.rebirthCount || 0;
+                const rm = gameState.rebirthMultiplier || 1.0;
+                const atMax = rc >= MAX_REBIRTHS;
+                const cost = getRebirthCost(rc);
+                const canRebirth = !atMax && gameState.money >= cost;
+                let rebirthHTML = `<p class="rebirth-info">Rebirths: <strong>${rc}/${MAX_REBIRTHS}</strong> | Sell Multiplier: <strong>${rm.toFixed(2)}x</strong> | Starting Plots: <strong>${INITIAL_PLOTS + rc}</strong></p>`;
+                if (atMax) {
+                    rebirthHTML += `<button disabled>Max Rebirths Reached</button>`;
+                } else {
+                    const nextMulti = Math.pow(1 + REBIRTH_MULTIPLIER_PER_LEVEL, rc + 1);
+                    rebirthHTML += `<p class="rebirth-info">Cost: <strong>${cost.toLocaleString()}💰</strong> (Current: ${gameState.money.toLocaleString()}💰)</p>`;
+                    rebirthHTML += `<button onclick="performRebirth()" ${canRebirth ? '' : 'disabled'} title="Spend ${cost.toLocaleString()}💰 to reset farm for +15% sell multiplier and +1 starting plot">\ud83d\udd04 Rebirth (Next: ${nextMulti.toFixed(2)}x)</button>`;
+                }
+                rebirthContentEl.innerHTML = rebirthHTML;
+            }
+        }
+
+        const saveGame = (isAuto = false) => {
+            if (!gameState) return;
+            if (isAuto && isModActive) return;
+            try {
+                const achievementsToSave = {};
+                Object.keys(ACHIEVEMENT_DATA).forEach(key => { achievementsToSave[key] = gameState.achievements[key] === true; });
+                const plotsToSave = gameState.plots.map(p => ({
+                    s: p.state, c: p.crop, pt: p.plantedTime, gd: p.growDuration, sss: p.specialStatuses, fw: p.finalWeightMultiplier, lk: p.isLocked || false
+                }));
+                const dataToSaveCommon = {
+                    v: SAVE_CODE_VERSION, m: gameState.money, p: plotsToSave, inv: gameState.inventory, tp: gameState.totalPlots, gsl: gameState.growthSpeedLevel, ach: achievementsToSave, st: gameState.stats,
+                    tips: gameState.shownTips || [], lu: Date.now(), sNRT: gameState.shopNextRefreshTimestamp, sCASK: gameState.shopCurrentlyAvailableSeedKeys,
+                    activeDailyQuests: gameState.activeDailyQuests, lastQuestResetTimestamp: gameState.lastQuestResetTimestamp, cw: gameState.currentWeather, wcts: gameState.weatherChangeTimestamp,
+                    rbc: gameState.rebirthCount || 0, rbm: gameState.rebirthMultiplier || 1.0,
+                };
+                if (isModActive) {
+                    if (!activeModChecksum) { if (!isAuto) { addMessage("Modded save error: No checksum. Re-apply mod.", 'error', true); saveCodeOutputEl.value = 'Mod Save Error'; copyCodeButtonEl.disabled = true; } return; }
+                    const modSaveData = { v: SAVE_CODE_VERSION, modId: activeModChecksum, state: dataToSaveCommon };
+                    const jsonString = JSON.stringify(modSaveData);
+                    const base64Encoded = btoa(jsonString);
+                    const finalSaveCode = "MOD|" + base64Encoded;
+                    if (!isAuto) { saveCodeOutputEl.value = 'SAVE CODES DISABLED IN BETA'; copyCodeButtonEl.disabled = true; addMessage("Save code exporting is disabled in BETA.", 'error', true); }
+                } else {
+                    const jsonString = JSON.stringify(dataToSaveCommon);
+                    const checksum = calculateChecksum(jsonString);
+                    const obfuscated = xorCipher(jsonString, XOR_SAVE_KEY);
+                    const base64Encoded = btoa(obfuscated);
+                    const finalSaveCode = base64Encoded + "." + checksum;
+                    localStorage.setItem('webFarmBetaSaveData', finalSaveCode); // Auto-save keeps local progress
+                    if (!isAuto) { saveCodeOutputEl.value = 'SAVE CODES DISABLED IN BETA'; copyCodeButtonEl.disabled = true; addMessage("Save code exporting is disabled in BETA.", 'error', true); }
+                }
+            } catch (error) {
+                console.error("Save Error:", error);
+                if (!isAuto) { addMessage(`Save failed. See console.`, 'error', true); saveCodeOutputEl.value = 'Save Error'; copyCodeButtonEl.disabled = true; }
+            }
+        }
+
+        const copySaveCode = () => {
+            const code = saveCodeOutputEl.value;
+            if (!code || copyCodeButtonEl.disabled) return;
+
+            const btnTxt = copyCodeButtonEl.textContent;
+            copyCodeButtonEl.disabled = true;
+
+            const resetBtn = () => {
+                setTimeout(() => {
+                    copyCodeButtonEl.textContent = btnTxt;
+                    copyCodeButtonEl.disabled = !saveCodeOutputEl.value || saveCodeOutputEl.value.startsWith('Err');
+                }, 2500);
+            };
+
+            const fallbackCopy = () => {
+                saveCodeOutputEl.removeAttribute('readonly');
+                saveCodeOutputEl.select();
+                try {
+                    document.execCommand('copy');
+                    addMessage("Code copied to clipboard!", 'success', true);
+                    copyCodeButtonEl.textContent = 'Copied!';
+                } catch (err) {
+                    console.error('Fallback copy failed:', err);
+                    addMessage('Automatic copy failed. Please copy manually.', 'error', true);
+                    copyCodeButtonEl.textContent = 'Select & Copy';
+                } finally {
+                    saveCodeOutputEl.setAttribute('readonly', true);
+                    window.getSelection()?.removeAllRanges();
+                    resetBtn();
+                }
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(code).then(() => {
+                    addMessage("Code copied to clipboard!", 'success', true);
+                    copyCodeButtonEl.textContent = 'Copied!';
+                    resetBtn();
+                }, () => {
+                    fallbackCopy();
+                });
+            } else {
+                fallbackCopy();
+            }
+        };
+
+
+        const loadGame = (rawSaveData) => {
+            if (!rawSaveData || typeof rawSaveData !== 'string' || !rawSaveData.trim()) { addMessage("Load Fail: No data.", 'error', true); return false; }
+            try {
+                let loadedVersion, dataToProcess;
+                if (rawSaveData.startsWith("MOD|")) {
+                    if (!isModActive) throw new Error("Modded save, no mod active. Apply mod first.");
+                    if (!activeModChecksum) throw new Error("Cannot verify modded save: Active mod inconsistent. Re-apply mod.");
+                    const encodedModData = rawSaveData.substring(4);
+                    let jsonString;
+                    try { jsonString = atob(encodedModData); } catch (e) { throw new Error("Modded save decode fail (Base64)."); }
+                    const loadedModFullData = JSON.parse(jsonString);
+                    if (typeof loadedModFullData !== 'object' || !loadedModFullData.modId || !loadedModFullData.state) throw new Error("Invalid modded save structure.");
+                    if (loadedModFullData.modId !== activeModChecksum) throw new Error(`Incorrect mod. Save needs mod ID '${loadedModFullData.modId}', active is '${activeModChecksum}'.`);
+                    loadedVersion = loadedModFullData.v || 0;
+                    dataToProcess = loadedModFullData.state;
+                } else {
+                    if (!rawSaveData.includes('.') || rawSaveData.split('.').length !== 2) throw new Error("Invalid save format (checksum).");
+                    const [encodedData, storedChecksum] = rawSaveData.split('.');
+                    if (!encodedData || storedChecksum.length !== 4) throw new Error("Invalid save structure (data/checksum).");
+                    let obfuscatedData;
+                    try { obfuscatedData = atob(encodedData); } catch (e) { throw new Error("Decode fail (Base64)."); }
+                    const jsonString = xorCipher(obfuscatedData, XOR_SAVE_KEY);
+                    const calculatedChecksum = calculateChecksum(jsonString);
+                    if (calculatedChecksum !== storedChecksum) throw new Error("Save data corrupted/tampered (Checksum mismatch).");
+                    const parsedData = JSON.parse(jsonString);
+                    if (isModActive) { CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); isModActive = false; activeModChecksum = null; addMessage("Standard save loaded. Mod deactivated.", 'info', true); checkAndResetDailyQuests(); }
+                    loadedVersion = parsedData.v || 0;
+                    dataToProcess = parsedData;
+                }
+                if (typeof dataToProcess !== 'object' || dataToProcess === null) throw new Error("Invalid save data state.");
+
+                let newState = createInitialGameState(false);
+
+                newState.money = (typeof dataToProcess.m === 'number' && dataToProcess.m >= 0) ? dataToProcess.m : newState.money;
+                newState.totalPlots = (typeof dataToProcess.tp === 'number' && dataToProcess.tp >= INITIAL_PLOTS) ? dataToProcess.tp : newState.totalPlots;
+                newState.growthSpeedLevel = (typeof dataToProcess.gsl === 'number' && dataToProcess.gsl >= 0) ? dataToProcess.gsl : newState.growthSpeedLevel;
+                newState.lastUpdate = (typeof dataToProcess.lu === 'number') ? dataToProcess.lu : Date.now();
+                newState.shownTips = Array.isArray(dataToProcess.tips) ? dataToProcess.tips : [];
+                newState.totalPlots = Math.min(MAX_PLOTS, Math.max(INITIAL_PLOTS, newState.totalPlots));
+                newState.growthSpeedLevel = Math.min(MAX_GROWTH_LEVELS, Math.max(0, newState.growthSpeedLevel));
+                newState.shopNextRefreshTimestamp = typeof dataToProcess.sNRT === 'number' ? dataToProcess.sNRT : 0;
+                newState.shopCurrentlyAvailableSeedKeys = Array.isArray(dataToProcess.sCASK) ? dataToProcess.sCASK.filter(key => CROP_DATA[key] && CROP_DATA[key].seedCost !== null) : [];
+                newState.activeDailyQuests = Array.isArray(dataToProcess.activeDailyQuests) ? dataToProcess.activeDailyQuests : [];
+                newState.lastQuestResetTimestamp = typeof dataToProcess.lastQuestResetTimestamp === 'number' ? dataToProcess.lastQuestResetTimestamp : 0;
+                newState.currentWeather = (typeof dataToProcess.cw === 'string' && WEATHER_CONFIG[dataToProcess.cw]) ? dataToProcess.cw : 'sunny';
+                newState.weatherChangeTimestamp = typeof dataToProcess.wcts === 'number' ? dataToProcess.wcts : (Date.now() + getRandomDuration(WEATHER_CONFIG[newState.currentWeather].duration_ms));
+                newState.rebirthCount = (typeof dataToProcess.rbc === 'number' && dataToProcess.rbc >= 0) ? Math.min(dataToProcess.rbc, MAX_REBIRTHS) : 0;
+                newState.rebirthMultiplier = (typeof dataToProcess.rbm === 'number' && dataToProcess.rbm >= 1) ? dataToProcess.rbm : Math.pow(1 + REBIRTH_MULTIPLIER_PER_LEVEL, newState.rebirthCount);
+
+
+                const loadedInv = dataToProcess.inv || {}; const loadedSeeds = loadedInv.seeds || {}; const loadedProduce = loadedInv.produce || {};
+                newState.inventory = { seeds: {}, produce: {} };
+                Object.keys(CROP_DATA).filter(k => CROP_DATA[k].seedCost !== null).forEach(key => { newState.inventory.seeds[key] = (typeof loadedSeeds[key] === 'number' && loadedSeeds[key] >= 0) ? loadedSeeds[key] : 0; });
+                Object.keys(loadedProduce).forEach(itemKey => {
+                    const loadedValue = loadedProduce[itemKey];
+                    let produceData = { count: 0, totalWeight: 0.0, isFavorited: false };
+                    if (typeof loadedValue === 'number') { // Legacy save format (pre-favoriting)
+                        produceData.count = loadedValue;
+                        produceData.totalWeight = loadedValue * 1.0;
+                    } else if (typeof loadedValue === 'object' && loadedValue !== null) {
+                        produceData.count = Math.max(0, loadedValue.count || 0);
+                        produceData.totalWeight = Math.max(0, loadedValue.totalWeight || 0);
+                        produceData.isFavorited = loadedValue.isFavorited === true;
+                        if (produceData.count === 0) produceData.totalWeight = 0.0;
+                    }
+                    // Only keep non-zero or favorited items to prevent massive state bloat
+                    if (produceData.count > 0 || produceData.isFavorited) {
+                        newState.inventory.produce[itemKey] = produceData;
+                    }
+                });
+
+                const loadedStats = dataToProcess.st || {}; const loadedHarvested = loadedStats.harvested || {}; const loadedPlanted = loadedStats.planted || {};
+                newState.stats.totalMoneyEarned = (typeof loadedStats.totalMoneyEarned === 'number' && loadedStats.totalMoneyEarned >= 0) ? loadedStats.totalMoneyEarned : 0;
+                newState.stats.hasSoldProduce = loadedStats.hasSoldProduce === true;
+                newState.stats.harvested = {}; newState.stats.planted = {}; newState.stats.mutationsHarvested = {};
+                Object.keys(CROP_DATA).forEach(key => {
+                    newState.stats.harvested[key] = (typeof loadedHarvested[key] === 'number' && loadedHarvested[key] >= 0) ? loadedHarvested[key] : 0;
+                    if (CROP_DATA[key].yields) { CROP_DATA[key].yields.forEach(yieldKey => { if (CROP_DATA[yieldKey]) { newState.stats.harvested[yieldKey] = (typeof loadedHarvested[yieldKey] === 'number' && loadedHarvested[yieldKey] >= 0) ? loadedHarvested[yieldKey] : 0; newState.stats.planted[yieldKey] = 0; } }); }
+                    newState.stats.planted[key] = (typeof loadedPlanted[key] === 'number' && loadedPlanted[key] >= 0) ? loadedPlanted[key] : 0;
+                });
+                newState.stats.mutationsHarvested = loadedStats.mutationsHarvested || {};
+
+
+                const loadedAchievements = dataToProcess.ach || {};
+                Object.keys(ACHIEVEMENT_DATA).forEach(key => { newState.achievements[key] = loadedAchievements[key] === true; });
+
+                newState.plots = [];
+                const loadedPlots = (Array.isArray(dataToProcess.p)) ? dataToProcess.p : [];
+                const now = Date.now();
+                for (let i = 0; i < newState.totalPlots; i++) {
+                    const loadedP = loadedPlots[i];
+                    const plot = { id: i, state: 'empty', crop: null, plantedTime: null, growDuration: null, specialStatuses: [], finalWeightMultiplier: null, isLocked: false };
+                    if (loadedP && typeof loadedP === 'object') {
+                        const validStates = ['empty', 'growing', 'ready'];
+                        const cropKey = loadedP.c; const state = loadedP.s;
+                        if (validStates.includes(state) && (cropKey === null || CROP_DATA[cropKey])) {
+                            plot.state = state; plot.crop = cropKey; plot.finalWeightMultiplier = (typeof loadedP.fw === 'number') ? loadedP.fw : null;
+                            plot.isLocked = loadedP.lk === true;
+                            plot.specialStatuses = [];
+                            if (Array.isArray(loadedP.sss)) { plot.specialStatuses = loadedP.sss.filter(s => SPECIAL_STATUSES[s]); }
+                            else if (typeof loadedP.ss === 'string' && SPECIAL_STATUSES[loadedP.ss]) { plot.specialStatuses = [loadedP.ss]; }
+
+                            if (plot.state === 'growing' && plot.crop) {
+                                if (typeof loadedP.pt === 'number' && typeof loadedP.gd === 'number' && loadedP.gd > 0) {
+                                    plot.plantedTime = loadedP.pt; plot.growDuration = loadedP.gd;
+                                    let environmentalSpeedBoost = 1.0; if (newState.currentWeather === 'gentle_rain' && WEATHER_CONFIG.gentle_rain.growthModifier) { environmentalSpeedBoost = WEATHER_CONFIG.gentle_rain.growthModifier; }
+                                    const effectiveGrowDuration = plot.growDuration / environmentalSpeedBoost; const timeElapsed = now - plot.plantedTime;
+                                    if (timeElapsed >= effectiveGrowDuration) { plot.state = 'ready'; plot.plantedTime = null; }
+                                    if (plot.finalWeightMultiplier === null && CROP_DATA[plot.crop]?.weightRange) { plot.finalWeightMultiplier = getRandomWeight(CROP_DATA[plot.crop].weightRange); } else if (plot.finalWeightMultiplier === null) { plot.finalWeightMultiplier = 1.0; }
+                                } else { plot.state = 'empty'; plot.crop = null; plot.specialStatuses = []; plot.finalWeightMultiplier = null; }
+                            } else if (plot.state !== 'empty') {
+                                if (!plot.crop) { plot.state = 'empty'; plot.specialStatuses = []; plot.finalWeightMultiplier = null; }
+                                else { plot.plantedTime = null; plot.growDuration = null; }
+                            }
+                        } else { plot.state = 'empty'; plot.crop = null; plot.specialStatuses = []; plot.finalWeightMultiplier = null; }
+                    }
+                    newState.plots.push(plot);
+                }
+                if (newState.plots.length !== newState.totalPlots) newState.totalPlots = newState.plots.length;
+
+                if (loadedVersion > SAVE_CODE_VERSION) addMessage(`Warning: Loaded save v${loadedVersion}. Current v${SAVE_CODE_VERSION}.`, 'error', true);
+                else if (loadedVersion < SAVE_CODE_VERSION && loadedVersion !== 0) addMessage(`Loaded save v${loadedVersion}. Updated to v${SAVE_CODE_VERSION}.`, 'info', true);
+
+                gameState = newState;
+                addMessage(`Game loaded ${rawSaveData.startsWith("MOD|") ? "(Modded)" : ""}!`, 'success', true);
+                saveCodeInputEl.value = ''; saveCodeOutputEl.value = ''; copyCodeButtonEl.disabled = true;
+                validateAndRefreshShopStock();
+                checkAndResetDailyQuests();
+                checkAllAchievements();
+                updateUI();
+                return true;
+            } catch (error) {
+                console.error("Load FAILED:", error);
+                addMessage(`Load Failed: ${error.message}`, 'error', true);
+                if (!rawSaveData.startsWith("MOD|") && isModActive) { CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); isModActive = false; activeModChecksum = null; }
+                return false;
+            }
+        }
+
+        const loadGamePrompt = () => { const code = saveCodeInputEl.value; if (!code?.trim()) { addMessage("Paste save code first.", 'error', true); return; } addMessage("Attempting load from code...", "info", true); if (loadGame(code)) saveGame(true); }
+        const loadFromLocalStorage = () => { addMessage("Checking browser storage...", "info", true); const savedData = localStorage.getItem('webFarmBetaSaveData'); if (savedData) { addMessage("Save data found. Loading...", "info", true); saveCodeOutputEl.value = 'Loading from storage...'; if (!loadGame(savedData)) { addMessage("Failed to load. Starting new game.", "error", true); localStorage.removeItem('webFarmBetaSaveData'); initializeNewGame(); } saveCodeOutputEl.value = ''; } else { addMessage("No saved game. Starting new game.", "info", true); initializeNewGame(); } }
+        const loadModFile = () => { if (!modFileInputEl || !modFileInputEl.files || modFileInputEl.files.length === 0) { addMessage("Select mod (.json) first.", "error", true); return; } const file = modFileInputEl.files[0]; if (file.type !== "application/json") { addMessage(`Invalid type: ${file.type}. Need .json.`, "error", true); modFileInputEl.value = ''; return; } const reader = new FileReader(); reader.onload = (event) => { try { const modData = JSON.parse(event.target.result); applyModData(modData); } catch (error) { console.error("Mod Load Error (JSON):", error); addMessage(`Mod load fail: Invalid JSON. ${error.message}`, "error", true); isModActive = false; activeModChecksum = null; CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); if (gameState) validateAndRefreshShopStock(); updateUI(); } finally { modFileInputEl.value = ''; } }; reader.onerror = (event) => { console.error("Mod Load Error (File):", event.target.error); addMessage("Mod load fail: Could not read file.", "error", true); isModActive = false; activeModChecksum = null; CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); if (gameState) validateAndRefreshShopStock(); updateUI(); modFileInputEl.value = ''; }; reader.readAsText(file); };
+        const applyModData = (modData) => {
+            if (!modData || typeof modData !== 'object') { addMessage("Mod Error: Invalid data.", "error", true); isModActive = false; activeModChecksum = null; CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); if (gameState) validateAndRefreshShopStock(); updateUI(); return; } CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); let cropsAdded = 0, cropsUpdated = 0, modAppliedSuccessfully = false; if (modData.crops && typeof modData.crops === 'object') { for (const cropKey in modData.crops) { if (!modData.crops.hasOwnProperty(cropKey)) continue; const modCrop = modData.crops[cropKey]; if (typeof modCrop !== 'object' || !modCrop.name || !modCrop.icon || (modCrop.seedCost !== null && typeof modCrop.seedCost !== 'number') || (modCrop.sellPrice !== null && typeof modCrop.sellPrice !== 'number') || (modCrop.growTime !== null && typeof modCrop.growTime !== 'number')) { addMessage(`Mod Warn: Skip invalid crop '${cropKey}'.`, 'error', true); continue; } if (modCrop.seedCost !== null && modCrop.seedCost < 0) modCrop.seedCost = 0; if (modCrop.sellPrice !== null && modCrop.sellPrice < 0) modCrop.sellPrice = 0; if (modCrop.growTime !== null && modCrop.growTime < 0) modCrop.growTime = 10000; if (DEFAULT_CROP_DATA[cropKey]) cropsUpdated++; else cropsAdded++; CROP_DATA[cropKey] = { name: modCrop.name, icon: modCrop.icon, seedCost: modCrop.seedCost, sellPrice: modCrop.sellPrice, growTime: modCrop.growTime, yields: Array.isArray(modCrop.yields) ? modCrop.yields.slice() : undefined, weightRange: Array.isArray(modCrop.weightRange) && modCrop.weightRange.length === 2 && typeof modCrop.weightRange[0] === 'number' && typeof modCrop.weightRange[1] === 'number' && modCrop.weightRange[0] <= modCrop.weightRange[1] ? modCrop.weightRange : DEFAULT_CROP_DATA[cropKey]?.weightRange || [1.0, 1.0], rarity: modCrop.rarity, stockChance: modCrop.stockChance }; modAppliedSuccessfully = true; } for (const cropKey in CROP_DATA) { if (CROP_DATA[cropKey].yields) { const originalYields = CROP_DATA[cropKey].yields.length; CROP_DATA[cropKey].yields = CROP_DATA[cropKey].yields.filter(yieldKey => { const exists = CROP_DATA[yieldKey]; if (!exists) addMessage(`Mod Warn: Yield '${yieldKey}' for '${cropKey}' not found. Removing.`, 'error', true); return exists; }); if (CROP_DATA[cropKey].yields.length === 0) { delete CROP_DATA[cropKey].yields; if (originalYields > 0) addMessage(`Mod Info: All yields for '${cropKey}' invalid. Removed.`, 'info'); } } } for (const defaultKey in DEFAULT_CROP_DATA) { if (!modData.crops || !modData.crops.hasOwnProperty(defaultKey)) { CROP_DATA[defaultKey] = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA[defaultKey])); } } } else { addMessage("Mod Info: No 'crops' in mod. Defaults used.", 'info'); CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); isModActive = false; activeModChecksum = null; if (gameState) validateAndRefreshShopStock(); updateUI(); return; } if (gameState) {
+                Object.keys(CROP_DATA).forEach(key => {
+                    if (CROP_DATA[key].seedCost !== null && gameState.inventory.seeds[key] === undefined) gameState.inventory.seeds[key] = 0;
+                    const processProduceInvForKey = (itemKey) => { if (gameState.inventory.produce[itemKey] === undefined) { gameState.inventory.produce[itemKey] = { count: 0, totalWeight: 0.0, isFavorited: false }; } };
+                    const addAllStatusCombinations = (baseKey) => { const statuses = Object.keys(SPECIAL_STATUSES); for (let i = 0; i < (1 << statuses.length); i++) { let combination = []; for (let j = 0; j < statuses.length; j++) { if ((i >> j) & 1) combination.push(statuses[j]); } const fullKey = combination.length > 0 ? combination.sort().join('_') + '_' + baseKey : baseKey; processProduceInvForKey(fullKey); } };
+                    if (CROP_DATA[key].sellPrice !== null) addAllStatusCombinations(key); if (CROP_DATA[key].yields) { CROP_DATA[key].yields.forEach(yK => { if (CROP_DATA[yK] && CROP_DATA[yK].sellPrice !== null) addAllStatusCombinations(yK); }); }
+                    if (gameState.stats.harvested[key] === undefined) gameState.stats.harvested[key] = 0; if (gameState.stats.planted[key] === undefined) gameState.stats.planted[key] = 0;
+                });['seeds', 'produce'].forEach(invType => { Object.keys(gameState.inventory[invType]).forEach(itemKey => { const { baseKey } = parseItemKey(itemKey); const itemExistsInCropData = CROP_DATA[baseKey]; let shouldDelete = !itemExistsInCropData; if (itemExistsInCropData) { if (invType === 'seeds' && itemExistsInCropData.seedCost === null) shouldDelete = true; if (invType === 'produce' && itemExistsInCropData.sellPrice === null && !itemExistsInCropData.yields) shouldDelete = true; } if (shouldDelete) delete gameState.inventory[invType][itemKey]; }); });['harvested', 'planted'].forEach(statType => { Object.keys(gameState.stats[statType]).forEach(itemKey => { if (!CROP_DATA[itemKey]) delete gameState.stats[statType][itemKey]; }); });
+            }
+
+            if (modAppliedSuccessfully) { isModActive = true; const modCropString = JSON.stringify(modData.crops); activeModChecksum = calculateChecksum(modCropString); addMessage(`Mod applied (ID: ${activeModChecksum}): ${cropsAdded} new, ${cropsUpdated} updated. Saving generates MODDED code.`, 'success', true); } else { isModActive = false; activeModChecksum = null; addMessage("Mod applied, no valid crops. Defaults used.", 'info'); }
+            if (gameState) { refreshShopStock(); } else if (typeof updateUI === "function") { updateUI(); }
+        };
+        const createInitialGameState = (resetCrops = true) => {
+            if (resetCrops) { CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); isModActive = false; activeModChecksum = null; }
+            const initialWeather = 'sunny';
+            const state = {
+                v: SAVE_CODE_VERSION, money: 0, plots: [], inventory: { seeds: {}, produce: {} }, achievements: {},
+                stats: { harvested: {}, planted: {}, totalMoneyEarned: 0, hasSoldProduce: false, mutationsHarvested: {} }, selectedCropToPlant: null,
+                totalPlots: INITIAL_PLOTS, growthSpeedLevel: 0, shownTips: [], lastUpdate: Date.now(), shopNextRefreshTimestamp: 0,
+                shopCurrentlyAvailableSeedKeys: [], activeDailyQuests: [], lastQuestResetTimestamp: 0,
+                currentWeather: initialWeather, weatherChangeTimestamp: Date.now() + getRandomDuration(WEATHER_CONFIG[initialWeather].duration_ms),
+                rebirthCount: 0, rebirthMultiplier: 1.0,
+            };
+            for (let i = 0; i < state.totalPlots; i++) state.plots.push({ id: i, state: 'empty', crop: null, plantedTime: null, growDuration: null, specialStatuses: [], finalWeightMultiplier: null, isLocked: false });
+
+            Object.keys(CROP_DATA).forEach(k => {
+                if (CROP_DATA[k].seedCost !== null) state.inventory.seeds[k] = 0;
+                const initProduceInv = (itemKey) => { if (state.inventory.produce[itemKey] === undefined) state.inventory.produce[itemKey] = { count: 0, totalWeight: 0.0, isFavorited: false }; };
+
+                if (CROP_DATA[k].sellPrice !== null) initProduceInv(k); // Only init base keys
+                state.stats.harvested[k] = 0; state.stats.planted[k] = 0;
+
+                if (CROP_DATA[k].yields) {
+                    CROP_DATA[k].yields.forEach(yK => {
+                        if (CROP_DATA[yK]) {
+                            if (CROP_DATA[yK].sellPrice !== null) initProduceInv(yK);
+                            if (state.stats.harvested[yK] === undefined) state.stats.harvested[yK] = 0;
+                            if (state.stats.planted[yK] === undefined) state.stats.planted[yK] = 0;
+                        }
+                    });
+                }
+            });
+            Object.keys(ACHIEVEMENT_DATA).forEach(k => state.achievements[k] = false);
+            if (CROP_DATA['wheat'] && CROP_DATA['wheat'].seedCost !== null) state.inventory.seeds['wheat'] = 3;
+            return state;
+        }
+        const initializeNewGame = () => {
+            isModActive = false; activeModChecksum = null;
+            CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA));
+            gameState = createInitialGameState(false);
+            const logHeader = messagesEl.querySelector('h2'); messagesEl.innerHTML = ''; if (logHeader) messagesEl.appendChild(logHeader);
+            addMessage("Welcome to Web Farm! Plant 🌾 or visit Shop 🛒.", "success", true);
+            saveCodeOutputEl.value = ''; saveCodeInputEl.value = ''; copyCodeButtonEl.disabled = true;
+            refreshShopStock();
+            generateNewDailyQuests();
+            checkAllAchievements();
+            updateUI();
+            setTimeout(() => showTip('welcome', 'Hi Farmer! Select seed, then click empty 🟫 plot to plant.'), 1500);
+        }
+        const processDevCommand = () => { if (!isDevModeEnabled || !gameState || !devCommandInputEl) return; const txt = devCommandInputEl.value.trim(); if (!txt.startsWith('/')) return; const args = txt.substring(1).split(' '), cmd = args[0].toLowerCase(), params = args.slice(1); let needsUI = false; try { switch (cmd) { case 'money': { const amt = parseInt(params[0], 10); if (!isNaN(amt) && amt >= 0) { gameState.money = amt; needsUI = true; addMessage(`Dev:Money=${amt}💰.`, 'dev'); } else addMessage("Usage: /money [amount]", 'error'); } break; case 'give': { if (params.length >= 2) { let itemKey = params[params.length - 2].toLowerCase(), giveAmount = parseInt(params[params.length - 1], 10); let specialGiveStatuses = params.slice(0, -2).map(s => s.toLowerCase()); let invalidStatuses = specialGiveStatuses.filter(s => !SPECIAL_STATUSES[s]); if (invalidStatuses.length > 0) { addMessage(`Invalid status(es): ${invalidStatuses.join(', ')}.`, 'error'); break; } const baseInfo = CROP_DATA[itemKey]; if (!baseInfo) addMessage(`Invalid item '${itemKey}'.`, 'error'); else if (isNaN(giveAmount) || giveAmount <= 0) addMessage("Invalid amount.", 'error'); else { let givenType = null; specialGiveStatuses.sort(); const targetInvKey = specialGiveStatuses.length > 0 ? specialGiveStatuses.join('_') + '_' + itemKey : itemKey; const prefix = specialGiveStatuses.map(s => SPECIAL_STATUSES[s].icon).join(''); if (baseInfo.seedCost !== null && specialGiveStatuses.length === 0) { gameState.inventory.seeds[targetInvKey] = (gameState.inventory.seeds[targetInvKey] || 0) + giveAmount; givenType = 'seeds'; } else if (baseInfo.sellPrice !== null) { if (!gameState.inventory.produce[targetInvKey]) gameState.inventory.produce[targetInvKey] = { count: 0, totalWeight: 0.0, isFavorited: false }; gameState.inventory.produce[targetInvKey].count += giveAmount; const itemWeightRange = baseInfo.weightRange || [1.0, 1.0]; const avgItemWeight = (itemWeightRange[0] + itemWeightRange[1]) / 2; gameState.inventory.produce[targetInvKey].totalWeight += giveAmount * avgItemWeight; givenType = 'produce'; } else if (baseInfo.yields && specialGiveStatuses.length === 0) { addMessage(`Info: '${itemKey}' yields items. Give seeds or specific [status...] [item] [amount].`, 'info'); } if (givenType) { addMessage(`Dev: Gave ${giveAmount} ${prefix} ${baseInfo.icon} (${givenType}).`, 'dev'); needsUI = true; } else addMessage(`Cannot give '${itemKey}' with statuses. Check type.`, 'error'); } } else addMessage("Usage: /give [status1] [status2]... [item_key] [amount]", 'error'); } break; case 'grow': { const itemKey = params[0]?.toLowerCase(); if (!itemKey) { addMessage("Usage: /grow [crop_key]", 'error'); break; } let grown = false; gameState.plots.forEach(p => { if (p.state === 'growing' && p.crop === itemKey) { p.state = 'ready'; p.plantedTime = null; p.growDuration = null; grown = true; } }); addMessage(grown ? `Dev: Grew ${CROP_DATA[itemKey]?.icon || ''} ${itemKey}.` : `No growing ${itemKey}.`, grown ? 'dev' : 'error'); needsUI = grown; } break; case 'growall': { let count = 0; gameState.plots.forEach(p => { if (p.state === 'growing') { p.state = 'ready'; p.plantedTime = null; p.growDuration = null; count++; } }); addMessage(count > 0 ? `Dev: Grew all ${count} plots.` : `No plots growing.`, count > 0 ? 'dev' : 'info'); needsUI = count > 0; } break; case 'achieve': case 'achievement': { const key = params[0]?.toLowerCase(); if (key === 'all' || key === '*') { let uC = 0; Object.keys(ACHIEVEMENT_DATA).forEach(k => { if (!gameState.achievements[k]) { gameState.achievements[k] = true; uC++; } }); addMessage(`Dev: Unlocked ${uC} achievements.`, 'dev'); needsUI = true; } else if (ACHIEVEMENT_DATA[key]) { if (!gameState.achievements[k]) { gameState.achievements[key] = true; addMessage(`Dev: Unlocked '${key}'.`, 'dev'); needsUI = true; } else addMessage(`Ach '${key}' already done.`, 'info'); } else addMessage(`Unknown ach key '${key}'. /achieve [key|all]`, 'error'); } break; case 'reset': { if (confirm("DEV: Reset ALL achievement progress?")) { Object.keys(gameState.achievements).forEach(k => gameState.achievements[k] = false); addMessage("Dev: All achievements reset.", 'dev'); needsUI = true; checkAllAchievements(); } } break; case 'reset_tips': { if (gameState) { gameState.shownTips = []; addMessage('Dev: Shown tips reset.', 'dev'); } break; } case 'reset_mod': { isModActive = false; activeModChecksum = null; CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); addMessage('Dev: Mod state reset. Defaults used.', 'dev'); needsUI = true; if (gameState) refreshShopStock(); break; } case 'refreshshop': { if (gameState) { gameState.shopNextRefreshTimestamp = Date.now() + 1000; addMessage('Dev: Shop refresh timer set to 1 second.', 'dev'); needsUI = true; } break; } case 'resetquests': { if (gameState) { generateNewDailyQuests(); addMessage('Dev: Daily quests reset.', 'dev'); needsUI = true; } break; } case 'completequests': { if (gameState && gameState.activeDailyQuests) { gameState.activeDailyQuests.forEach(q => { const qDef = QUEST_DEFINITIONS.find(d => d.id === q.questId); if (qDef) q.progress = qDef.targetAmount; q.completed = true; }); addMessage('Dev: All active quests marked complete.', 'dev'); needsUI = true; } break; } case 'weather': { if (params.length > 0 && WEATHER_CONFIG[params[0].toLowerCase()]) { gameState.currentWeather = params[0].toLowerCase(); gameState.weatherChangeTimestamp = Date.now() + getRandomDuration(WEATHER_CONFIG[gameState.currentWeather].duration_ms); addMessage(`Dev: Weather set to ${WEATHER_CONFIG[gameState.currentWeather].icon} ${WEATHER_CONFIG[gameState.currentWeather].name}.`, 'dev'); needsUI = true; } else { addMessage(`Usage: /weather [${Object.keys(WEATHER_CONFIG).join('|')}]`, 'error'); } break; } case 'help': { addMessage(["--- Dev Commands ---", "/money [amt]", "/give [status...] [item] [amt]", "/grow [crop]", "/growall", "/achieve [key|all]", "/reset (ach)", "/reset_tips", "/reset_mod", "/refreshshop", "/resetquests", "/completequests", `/weather [${Object.keys(WEATHER_CONFIG).join('|')}]`, "/help"].join('\n'), 'dev', true); break; } default: addMessage(`Unknown cmd: /${cmd}. /help for options.`, 'error'); break; } } catch (e) { console.error("Dev Command Error:", txt, e); addMessage(`Dev Error /${cmd}. Check console.`, 'error'); } devCommandInputEl.value = ''; if (needsUI) { updateUI(); checkAllAchievements(); } }
+        const setupEventListeners = () => { if (saveCodeInputEl && devConsoleEl && devCommandInputEl) { saveCodeInputEl.addEventListener('input', () => { if (saveCodeInputEl.value === DEV_ACTIVATION_CODE) { isDevModeEnabled = !isDevModeEnabled; devConsoleEl.style.display = isDevModeEnabled ? 'block' : 'none'; saveCodeInputEl.value = ''; if (isDevModeEnabled) setTimeout(() => devCommandInputEl.focus(), 50); } }); devCommandInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processDevCommand(); } }); } else console.error("Cannot setup dev listeners"); farmGridEl.addEventListener('mouseover', (event) => { const tP = event.target.closest('.plot'); if (tP && !tP.classList.contains('locked')) { const pId = parseInt(tP.dataset.plotId, 10); if (!isNaN(pId)) showPlotTooltip(pId, event); } else hidePlotTooltip(); }); farmGridEl.addEventListener('mouseout', (event) => { if (!farmGridEl.contains(event.relatedTarget)) hidePlotTooltip(); else { const fP = event.target.closest('.plot'); const tE = event.relatedTarget; if (fP && (!tE || !fP.contains(tE))) { const tP = tE?.closest('.plot'); if (!tP || tP.classList.contains('locked')) hidePlotTooltip(); } } }); farmGridEl.addEventListener('mousemove', movePlotTooltip); if (inventoryEl) { inventoryEl.addEventListener('contextmenu', (e) => { const li = e.target.closest('li[data-item-key]'); if (li && produceInventoryEl.contains(li)) { e.preventDefault(); const itemKey = li.dataset.itemKey; toggleFavoriteProduce(itemKey); } }); } }
+
+        const handleSeasonalEvents = () => {
+            // Dango Event - Expires July 5th, 2024, 4pm AEST (UTC+10), which is 6am UTC.
+            // The 'Z' at the end of the date string specifies UTC time.
+            const dangoExpirationDate = new Date('2024-07-05T06:00:00Z').getTime();
+            const now = Date.now();
+
+            if (now > dangoExpirationDate) {
+                // If the event is over, make the dango seed unbuyable.
+                // The crop data remains so players can still see/sell their existing dango.
+                if (CROP_DATA['dango']) {
+                    CROP_DATA['dango'].seedCost = null;
+                }
+            }
+        };
+
+        const initGame = () => {
+            handleSeasonalEvents(); // Check for limited-time events first
+            if (gameLoopInterval) clearInterval(gameLoopInterval); if (autoSaveInterval) clearInterval(autoSaveInterval); gameLoopInterval = null; autoSaveInterval = null; isModActive = false; activeModChecksum = null; CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); isDevModeEnabled = true; if (devConsoleEl) devConsoleEl.style.display = 'block'; loadFromLocalStorage(); setupEventListeners(); if (gameState) { gameLoopInterval = setInterval(gameLoop, TICK_INTERVAL); autoSaveInterval = setInterval(() => { if (gameState && !isModActive) { saveGame(true); } else if (isModActive) { /* Autosave skipped: Mod active. */ } else { console.warn("Autosave skipped: gameState null."); if (autoSaveInterval) clearInterval(autoSaveInterval); if (gameLoopInterval) clearInterval(gameLoopInterval); } }, AUTOSAVE_INTERVAL); } else { console.error("CRITICAL: Game state failed to init."); addMessage("CRITICAL ERROR INITIALIZING. Please refresh.", "error", true); }
+        }
+
+        document.addEventListener('DOMContentLoaded', initGame);
+
+        // Copyright Guahh Inc 2025
+    </script>
+</body>
+
+</html>
