@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Plinko Simulator</title>
+    <!-- Matter.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: #111827;
+            --card-bg: #1f2937;
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.4);
+            --secondary: #6366f1;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0f172a;
+            color: var(--text-main);
+            font-family: var(--font-family);
+            display: flex;
+            min-height: 100vh;
+            overflow-y: auto;
+            justify-content: center;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 25px;
+            align-items: flex-start;
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            max-width: 600px;
+        }
+
+        canvas {
+            border-radius: 12px;
+            background: #1e293b;
+            z-index: 1;
+        }
+
+        .multipliers-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .multiplier {
+            position: absolute;
+            font-size: 13px;
+            font-weight: 900;
+            color: white;
+            text-align: center;
+            text-shadow: 0 0 6px currentColor;
+            letter-spacing: -0.5px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid currentColor;
+            border-radius: 4px;
+            padding: 4px 0;
+            white-space: nowrap;
+        }
+
+        #floating-texts-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .ui-panel {
+            width: 400px;
+            background-color: var(--panel-bg);
+            border-radius: 16px;
+            padding: 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .balance {
+            font-size: 40px;
+            font-weight: 900;
+            color: #fbbf24;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.15);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background-color: #374151;
+            color: #6b7280;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            filter: none;
+        }
+
+        .btn-drop {
+            padding: 18px 24px;
+            font-size: 20px;
+            background: var(--secondary);
+            border-radius: 12px;
+        }
+
+        .btn-drop:hover:not(:disabled) {
+            background: #4f46e5;
+        }
+
+        .btn-drop-price {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-muted);
+            padding: 0 5px;
+            font-weight: 500;
+        }
+
+        .stats-row span strong {
+            color: #fff;
+        }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+        }
+
+        .section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .store-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .upgrade-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .upgrade-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .upgrade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .upgrade-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #f3f4f6;
+        }
+
+        .upgrade-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .upgrade-level {
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+            color: #fbbf24;
+            font-weight: 700;
+        }
+
+        .potion-bg {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .potion-bg:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        /* Floating text animation for gains */
+        .float-text {
+            position: absolute;
+            font-weight: 900;
+            font-size: 22px;
+            pointer-events: none;
+            animation: floatUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            text-shadow: 0 0 12px currentColor;
+            z-index: 20;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0.8);
+                opacity: 0;
+            }
+
+            10% {
+                transform: translateY(-10px) scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-70px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Game Canvas Area -->
+        <div class="game-area" id="game-area">
+            <div id="render-container"></div>
+            <div class="multipliers-overlay" id="multipliers-container">
+                <!-- Multipliers injected here -->
+            </div>
+            <div id="floating-texts-container"></div>
+            <button class="btn-drop" id="btn-drop" onclick="dropBall()" style="max-width: 320px; margin-top: 15px;">
+                <span>Drop Ball</span>
+                <span class="btn-drop-price" id="drop-cost-display">$10.00</span>
+            </button>
+        </div>
+
+        <!-- Right UI Panel -->
+        <div class="ui-panel">
+            <div class="header">
+                <h1>WEB PLINKO</h1>
+                <div class="balance">$<span id="balance-display">100.00</span></div>
+            </div>
+
+            <div class="stats-row">
+                <span>Value per Drop: <strong id="base-value-display">$10.00</strong></span>
+                <span>Global Multiplier: <strong id="global-mult-display">1.0x</strong></span>
+            </div>
+
+            <div class="section-title">Upgrades</div>
+            <div class="store-list">
+
+                <div class="upgrade-card">
+                    <div class="upgrade-header">
+                        <div>
+                            <div class="upgrade-title">Multi-Drop</div>
+                            <div class="upgrade-desc">Drops multiple balls per click</div>
+                        </div>
+                        <div class="upgrade-level" id="level-multi">1 Ball</div>
+                    </div>
+                    <button id="btn-upg-multi" onclick="buyUpgrade('multi')">
+                        <span>Upgrade</span>
+                        <span id="cost-upg-multi">$300</span>
+                    </button>
+                </div>
+
+                <div class="upgrade-card">
+                    <div class="upgrade-header">
+                        <div>
+                            <div class="upgrade-title">Better Balls</div>
+                            <div class="upgrade-desc">Increases base drop value by $2</div>
+                        </div>
+                        <div class="upgrade-level" id="level-better-balls">Lv. 0</div>
+                    </div>
+                    <button id="btn-upg-value" onclick="buyUpgrade('value')">
+                        <span>Upgrade</span>
+                        <span id="cost-upg-value">$50</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="section-title">Potions (Active Effects)</div>
+            <div class="store-list">
+                <div class="upgrade-card potion-bg">
+                    <div class="upgrade-header">
+                        <div>
+                            <div class="upgrade-title">Flask of Liquid Luck</div>
+                            <div class="upgrade-desc">Greatly increases edge multipliers for 2 mins</div>
+                        </div>
+                        <div class="upgrade-level" id="status-luck">Inactive</div>
+                    </div>
+                    <button id="btn-upg-luck" style="background:#8b5cf6; color:#ffffff; font-weight:700;"
+                        onclick="buyPotion('luck')">
+                        <span>Consume</span>
+                        <span>$400</span>
+                    </button>
+                </div>
+
+                <div class="upgrade-card potion-bg">
+                    <div class="upgrade-header">
+                        <div>
+                            <div class="upgrade-title">Midas Draught</div>
+                            <div class="upgrade-desc">+0.5x Global Earnings for 2 mins</div>
+                        </div>
+                        <div class="upgrade-level" id="status-midas">Inactive</div>
+                    </div>
+                    <button id="btn-upg-midas" style="background:#d946ef; color:#ffffff; font-weight:700;"
+                        onclick="buyPotion('midas')">
+                        <span>Consume</span>
+                        <span>$1,000</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let money = 150;
+        let baseDropValue = 10;
+        let dropCost = 10;
+        let globalMultiplier = 1;
+
+        let upgMultiAmount = 1; // max 3
+        let upgMultiCost = 300;
+
+        let upgValueLevel = 0;
+        let upgValueCost = 50;
+
+        // Load Game Data
+        const savedData = localStorage.getItem('webPlinkoSave');
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                money = data.money !== undefined ? data.money : 150;
+                baseDropValue = data.baseDropValue || 10;
+                dropCost = data.dropCost || 10;
+                upgMultiAmount = data.upgMultiAmount || 1;
+                upgMultiCost = data.upgMultiCost || 300;
+                upgValueLevel = data.upgValueLevel || 0;
+                upgValueCost = data.upgValueCost || 50;
+            } catch (e) { }
+        }
+
+        // Save game function
+        function saveGame() {
+            const data = {
+                money,
+                baseDropValue,
+                dropCost,
+                upgMultiAmount,
+                upgMultiCost,
+                upgValueLevel,
+                upgValueCost
+            };
+            localStorage.setItem('webPlinkoSave', JSON.stringify(data));
+        }
+
+        // Save periodically
+        setInterval(saveGame, 5000);
+
+        let luckDuration = 0; // seconds
+        let midasDuration = 0; // seconds
+
+        // Effect trackers
+        let luckBonusApplied = false;
+        let midasBonusCount = 0;
+
+        const colors = [
+            '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16',
+            '#22c55e',
+            '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444'
+        ];
+        let baseMultipliers = [25, 10, 3, 1.5, 0.5, 0.2, 0.5, 1.5, 3, 10, 25];
+
+        function formatMoney(num) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // --- MATTER.JS SETUP ---
+        const Engine = Matter.Engine,
+            Render = Matter.Render,
+            Runner = Matter.Runner,
+            Composite = Matter.Composite,
+            Bodies = Matter.Bodies,
+            Events = Matter.Events;
+
+        // Constants
+        const WIDTH = 600;
+        const HEIGHT = 720;
+        const PEGS_ROWS = 12; // 12 rows means bottom row has 12 pegs, so 11 slots between them
+        const PEG_SPACING = 40;
+        const START_X = WIDTH / 2;
+        const START_Y = 80;
+        const BALL_RADIUS = 9.5;
+
+        const engine = Engine.create();
+        engine.world.gravity.y = 1.2;
+
+        const render = Render.create({
+            element: document.getElementById('render-container'),
+            engine: engine,
+            options: {
+                width: WIDTH,
+                height: HEIGHT,
+                wireframes: false,
+                background: 'transparent',
+                pixelRatio: window.devicePixelRatio,
+            }
+        });
+
+        // Pegs (static circles)
+        const pegs = [];
+        for (let i = 1; i < PEGS_ROWS - 1; i++) {
+            for (let j = 0; j <= i; j++) {
+                let x = START_X + (j * PEG_SPACING) - (i * PEG_SPACING / 2);
+                let y = START_Y + i * PEG_SPACING;
+
+                let peg = Bodies.circle(x, y, 4, {
+                    isStatic: true,
+                    render: {
+                        fillStyle: '#ffffff',
+                        strokeStyle: 'rgba(255,255,255,0.3)',
+                        lineWidth: 2
+                    },
+                    restitution: 0.4,
+                    friction: 0.05
+                });
+                pegs.push(peg);
+            }
+        }
+        Composite.add(engine.world, pegs);
+
+        // Pyramid left X boundary for the first slot
+        const pyramidLeft = START_X - ((baseMultipliers.length / 2) * PEG_SPACING);
+
+        // Pocket walls (dividers below the last row of pegs)
+        const pocketWalls = [];
+        const packetY = START_Y + (PEGS_ROWS - 1) * PEG_SPACING + 45;
+
+        for (let i = 0; i <= baseMultipliers.length; i++) {
+            let x = pyramidLeft + i * PEG_SPACING - (PEG_SPACING / 2);
+            let wall = Bodies.rectangle(x, packetY, 4, 80, {
+                isStatic: true,
+                render: { fillStyle: 'rgba(255, 255, 255, 0.15)' },
+                restitution: 0.2
+            });
+            pocketWalls.push(wall);
+        }
+        Composite.add(engine.world, pocketWalls);
+
+        // Render visual Multipliers overlay
+        function renderMultipliers() {
+            const container = document.getElementById('multipliers-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i < baseMultipliers.length; i++) {
+                let div = document.createElement('div');
+                div.className = 'multiplier';
+
+                let valStr = baseMultipliers[i] % 1 === 0 ? baseMultipliers[i] : baseMultipliers[i].toFixed(1);
+                div.innerText = valStr + 'x';
+                div.style.color = colors[i];
+                div.style.borderColor = colors[i];
+
+                let xPos = pyramidLeft + i * PEG_SPACING;
+                div.style.left = (xPos - PEG_SPACING / 2 + 2) + 'px'; // +2 for slight padding
+                div.style.width = (PEG_SPACING - 4) + 'px'; // -4 for padding
+                div.style.top = (packetY + 14) + 'px';
+
+                container.appendChild(div);
+            }
+        }
+        renderMultipliers();
+
+        Render.run(render);
+        const runner = Runner.create();
+        Runner.run(runner, engine);
+
+        // --- GAME LOGIC ---
+
+        function updateUI() {
+            document.getElementById('balance-display').innerText = formatMoney(money);
+            document.getElementById('drop-cost-display').innerText = '$' + formatMoney(dropCost);
+            document.getElementById('base-value-display').innerText = '$' + formatMoney(baseDropValue);
+            document.getElementById('global-mult-display').innerText = globalMultiplier.toFixed(1) + 'x';
+
+            document.getElementById('level-multi').innerText = upgMultiAmount + ' Ball' + (upgMultiAmount > 1 ? 's' : '');
+            document.getElementById('cost-upg-multi').innerText = upgMultiAmount >= 3 ? 'MAX' : '$' + formatMoney(upgMultiCost);
+            document.getElementById('btn-upg-multi').disabled = money < upgMultiCost || upgMultiAmount >= 3;
+
+            document.getElementById('level-better-balls').innerText = 'Lv. ' + upgValueLevel;
+            document.getElementById('cost-upg-value').innerText = '$' + formatMoney(upgValueCost);
+            document.getElementById('btn-upg-value').disabled = money < upgValueCost;
+
+            if (luckDuration > 0) {
+                document.getElementById('status-luck').innerText = Math.floor(luckDuration / 60) + ':' + (luckDuration % 60).toString().padStart(2, '0');
+                document.getElementById('status-luck').style.color = '#10b981';
+            } else {
+                document.getElementById('status-luck').innerText = 'Inactive';
+                document.getElementById('status-luck').style.color = '#fbbf24';
+            }
+
+            if (midasDuration > 0) {
+                document.getElementById('status-midas').innerText = Math.floor(midasDuration / 60) + ':' + (midasDuration % 60).toString().padStart(2, '0');
+                document.getElementById('status-midas').style.color = '#10b981';
+            } else {
+                document.getElementById('status-midas').innerText = 'Inactive';
+                document.getElementById('status-midas').style.color = '#fbbf24';
+            }
+
+            document.getElementById('btn-upg-luck').disabled = money < 400;
+            document.getElementById('btn-upg-midas').disabled = money < 1000;
+
+            document.getElementById('btn-drop').disabled = money < dropCost;
+        }
+
+        // Drop Ball
+        function dropBall() {
+            const totalCost = dropCost * upgMultiAmount;
+            if (money < totalCost) return;
+            money -= totalCost;
+            saveGame(); // save immediately on spend
+            updateUI();
+
+            for (let i = 0; i < upgMultiAmount; i++) {
+                setTimeout(() => {
+                    const offset = (Math.random() - 0.5) * 6; // random drop start point jitter
+
+                    const ball = Bodies.circle(START_X + offset, 25, BALL_RADIUS, {
+                        restitution: 0.4,
+                        friction: 0.001,
+                        frictionAir: 0.025,
+                        density: 0.04,
+                        render: {
+                            fillStyle: '#ec4899', // super pink
+                            strokeStyle: '#fbcfe8',
+                            lineWidth: 2
+                        },
+                        gameValue: baseDropValue,
+                        isPlinkoBall: true
+                    });
+
+                    Composite.add(engine.world, ball);
+                }, i * 150); // Stagger drops slightly
+            }
+        }
+
+        // Upgrades
+        function buyUpgrade(type) {
+            if (type === 'multi') {
+                if (money >= upgMultiCost && upgMultiAmount < 3) {
+                    money -= upgMultiCost;
+                    upgMultiAmount++;
+                    upgMultiCost = Math.floor(upgMultiCost * 4.5); // steep scaling
+                }
+            } else if (type === 'value') {
+                if (money >= upgValueCost) {
+                    money -= upgValueCost;
+                    upgValueLevel++;
+                    baseDropValue += 2;
+                    // Slightly increase drop cost, making better drop value incredibly powerful but requires more baseline bet
+                    dropCost = Math.floor(baseDropValue * 0.8) + 2;
+                    upgValueCost = Math.floor(upgValueCost * 1.8);
+                }
+            }
+            updateUI();
+        }
+
+        function buyPotion(type) {
+            if (type === 'luck' && money >= 400) {
+                money -= 400;
+                luckDuration += 120; // add 2 mins
+                if (!luckBonusApplied) {
+                    luckBonusApplied = true;
+                    baseMultipliers[0] += 5;
+                    baseMultipliers[10] += 5;
+                    baseMultipliers[1] += 2;
+                    baseMultipliers[9] += 2;
+                    baseMultipliers[2] += 0.5;
+                    baseMultipliers[8] += 0.5;
+                    renderMultipliers();
+                }
+            } else if (type === 'midas' && money >= 1000) {
+                money -= 1000;
+                midasDuration += 120; // add 2 mins
+                midasBonusCount++;
+                globalMultiplier += 0.5;
+            }
+            updateUI();
+        }
+
+        // Potion Timer Loop
+        setInterval(() => {
+            let changed = false;
+
+            if (luckDuration > 0) {
+                luckDuration--;
+                if (luckDuration === 0 && luckBonusApplied) {
+                    luckBonusApplied = false;
+                    baseMultipliers[0] -= 5;
+                    baseMultipliers[10] -= 5;
+                    baseMultipliers[1] -= 2;
+                    baseMultipliers[9] -= 2;
+                    baseMultipliers[2] -= 0.5;
+                    baseMultipliers[8] -= 0.5;
+                    renderMultipliers();
+                }
+                changed = true;
+            }
+
+            if (midasDuration > 0) {
+                midasDuration--;
+                if (midasDuration === 0 && midasBonusCount > 0) {
+                    globalMultiplier -= 0.5 * midasBonusCount;
+                    midasBonusCount = 0;
+                }
+                changed = true;
+            }
+
+            if (changed) updateUI();
+        }, 1000);
+
+        // Particles Effect
+        function createParticleExplosion(x, y, color) {
+            const container = document.getElementById('floating-texts-container');
+            const numParticles = 6;
+
+            for (let i = 0; i < numParticles; i++) {
+                let p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.style.backgroundColor = color;
+                p.style.boxShadow = `0 0 8px ${color}`;
+
+                let angle = Math.random() * Math.PI * 2;
+                let force = Math.random() * 40 + 20;
+                let vx = Math.cos(angle) * force;
+                let vy = Math.sin(angle) * force - 20;
+
+                p.style.transition = 'all 0.6s cubic-bezier(0.1, 0.8, 0.3, 1)';
+                container.appendChild(p);
+
+                // Reflow
+                void p.offsetWidth;
+
+                p.style.transform = `translate(${vx}px, ${vy}px) scale(0)`;
+                p.style.opacity = '0';
+
+                setTimeout(() => p.remove(), 600);
+            }
+        }
+
+        function createFloatingText(x, y, text, color) {
+            const container = document.getElementById('floating-texts-container');
+            const el = document.createElement('div');
+            el.className = 'float-text';
+            el.innerText = text;
+
+            // randomly offset so overlaps are readable
+            const cx = x - 30 + (Math.random() * 20 - 10);
+            el.style.left = cx + 'px';
+            el.style.top = y + 'px';
+            el.style.color = color;
+            container.appendChild(el);
+
+            setTimeout(() => el.remove(), 1200);
+        }
+
+        // Hit Detection loop
+        Events.on(engine, 'afterUpdate', function () {
+            const bodies = engine.world.bodies;
+            const endY = packetY; // bottom of the buckets
+
+            for (let i = 0; i < bodies.length; i++) {
+                const body = bodies[i];
+                if (body.isPlinkoBall && body.position.y > endY) {
+                    const x = body.position.x;
+                    let slotIndex = Math.floor((x - (pyramidLeft - PEG_SPACING / 2)) / PEG_SPACING);
+
+                    let winAmount = 0;
+                    let mult = 0;
+
+                    // Only reward if it lands perfectly inside one of the buckets
+                    if (slotIndex >= 0 && slotIndex < baseMultipliers.length) {
+                        mult = baseMultipliers[slotIndex];
+                        winAmount = body.gameValue * mult * globalMultiplier;
+
+                        money += winAmount;
+
+                        createFloatingText(body.position.x, packetY - 10, '+$' + formatMoney(winAmount), colors[slotIndex]);
+                        createParticleExplosion(body.position.x, body.position.y - 20, colors[slotIndex]);
+                    }
+
+                    updateUI();
+
+                    Composite.remove(engine.world, body);
+                }
+
+                if (body.isPlinkoBall && body.speed < 0.2 && body.position.y < (endY - 30)) {
+                    Matter.Body.applyForce(body, body.position, {
+                        x: (Math.random() - 0.5) * 0.0001,
+                        y: 0
+                    });
+                }
+
+                // Cleanup lost balls
+                if (body.position.y > HEIGHT + 100) {
+                    Composite.remove(engine.world, body);
+                }
+            }
+        });
+
+        // Failsafe for bankrupcy
+        setInterval(() => {
+            const numBalls = engine.world.bodies.filter(b => b.isPlinkoBall).length;
+            if (money < dropCost && numBalls === 0) {
+                // Compassion drop cost to let them play
+                money += dropCost;
+
+                // If auto drop is left on, force drop one so it doesn't just sit there
+                if (autoDropActive) {
+                    dropBall(true);
+                } else {
+                    updateUI();
+                }
+            }
+        }, 1500);
+
+        // Resize rendering view correctly for mobile if needed
+        window.addEventListener('resize', () => {
+            // In a robust implementation, reposition walls/pegs on resize, 
+            // but here we just keep a fixed rendering view.
+        });
+
+        updateUI();
+    </script>
+</body>
+
+</html>
