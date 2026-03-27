@@ -23,8 +23,12 @@
             <span class="top-bar-money">💰 Money: <span id="money">0</span></span>
             <span id="weather-display" class="top-bar-weather"></span>
         </div>
-        <button type="button" id="settings-gear-button" onclick="openSettingsPopup()" title="Settings">⚙️</button>
+        <div class="top-bar-actions">
+            <button type="button" id="update-log-button" class="top-bar-action-button" onclick="openUpdateLogPopup()" title="Update Log">📜</button>
+            <button type="button" id="settings-gear-button" class="top-bar-action-button" onclick="openSettingsPopup()" title="Settings">⚙️</button>
+        </div>
     </header>
+    <div id="top-announcement" aria-live="polite" aria-atomic="true"></div>
 
     <div id="game-container">
         <!-- Farm Area -->
@@ -45,13 +49,6 @@
                         style="flex:1; padding:6px;">⚙️ Gears</button>
                 </div>
                 <div id="shop-shared-header" style="margin-bottom:8px;">
-                    <div id="purchase-qty-seeds" style="margin-bottom:6px; display:flex;">
-                        <label style="font-size:0.9em; margin-right:6px;">Seeds Qty:</label>
-                        <button class="qty-toggle-btn qty-seeds active" onclick="setPurchaseQtySeeds(1)">1</button>
-                        <button class="qty-toggle-btn qty-seeds" onclick="setPurchaseQtySeeds(10)">10</button>
-                        <button class="qty-toggle-btn qty-seeds" onclick="setPurchaseQtySeeds(20)">20</button>
-                        <button class="qty-toggle-btn qty-seeds" onclick="setPurchaseQtySeeds(50)">50</button>
-                    </div>
                     <h4>Shop Status: <span id="shop-refresh-timer"
                             style="font-weight:normal; font-size:0.85em; color:var(--log-info-color);"></span></h4>
                 </div>
@@ -205,9 +202,22 @@
         </div>
     </div>
 
+    <div id="update-log-backdrop">
+        <div id="update-log-modal">
+            <div class="settings-modal-header">
+                <h2><span style="font-size:1.2em">📜</span> Update Log</h2>
+                <button class="settings-modal-close" onclick="closeUpdateLogPopup()" title="Close">✖</button>
+            </div>
+            <div class="update-log-body">
+                <div id="update-log-list" class="update-log-list"></div>
+                <div id="update-log-detail" class="update-log-detail"></div>
+            </div>
+        </div>
+    </div>
+
 
     <script src="script.js"></script>
-    <p style="text-align:center; font-size:0.75em; color:#7f8c8d; margin:15px 0 10px; opacity:0.7;">Web Farm v1.2.6 | Made by Guahh</p>
+    <p style="text-align:center; font-size:0.75em; color:#7f8c8d; margin:15px 0 10px; opacity:0.7;">Web Farm v1.2.7 | Made by Guahh</p>
 </body>
 
 </html>
