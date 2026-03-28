@@ -516,9 +516,6 @@
             gameState.shownTips = savedShownTips;
             gameState.stats = savedStats;
             gameState.usedPromoCodes = savedUsedPromoCodes;
-            // #region agent log
-            fetch('http://127.0.0.1:7711/ingest/f0a6c53b-7ebe-41d3-94f8-ef8a60c84063',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ef421f'},body:JSON.stringify({sessionId:'ef421f',location:'script.js:performRebirth:after',message:'promo after rebirth',data:{saved:savedUsedPromoCodes,now:gameState.usedPromoCodes?.slice?.()},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-            // #endregion
             gameState.farmName = savedFarmName;
 
             // Restore locked produce flags on any matching keys that still exist
@@ -776,9 +773,6 @@
             const hadMissingStock = !Number.isFinite(gameState.shopGearStock[key]);
             if (hadMissingStock) ensureShopGearStockForKey(key);
             let stockLeft = gameState.shopGearStock[key];
-            // #region agent log
-            if (hadMissingStock) fetch('http://127.0.0.1:7711/ingest/f0a6c53b-7ebe-41d3-94f8-ef8a60c84063',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ef421f'},body:JSON.stringify({sessionId:'ef421f',location:'script.js:buyGear:missingStock',message:'gear had no finite stock row',data:{key,afterEnsure:Number.isFinite(stockLeft)?stockLeft:null},timestamp:Date.now(),hypothesisId:'H-gear-1'})}).catch(()=>{});
-            // #endregion
             if (!Number.isFinite(stockLeft) || stockLeft <= 0) {
                 addMessage(`${info.name} is sold out until the shop refreshes.`, 'error', true);
                 gameState.shopCurrentlyAvailableGearKeys = gameState.shopCurrentlyAvailableGearKeys.filter(k => k !== key);
@@ -937,9 +931,6 @@
                 gameState.shopCurrentlyAvailableSeedKeys = [];
                 gameState.shopNextRefreshTimestamp = Date.now() + getRandomDuration([SHOP_REFRESH_MIN, SHOP_REFRESH_MAX]);
                 addMessage("🛒 Shop has no seeds to stock currently.", 'info');
-                // #region agent log
-                fetch('http://127.0.0.1:7711/ingest/f0a6c53b-7ebe-41d3-94f8-ef8a60c84063',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ef421f'},body:JSON.stringify({sessionId:'ef421f',location:'script.js:refreshShopStock:emptyPlantable',message:'no plantable crops',data:{plantableLen:0},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-                // #endregion
                 updateUI();
                 return;
             }
@@ -1053,9 +1044,6 @@
             gameState.shopNextRefreshTimestamp = Date.now() + getRandomDuration([SHOP_REFRESH_MIN, SHOP_REFRESH_MAX]);
 
             addMessage("🛒 Shop has restocked its items!", 'info');
-            // #region agent log
-            fetch('http://127.0.0.1:7711/ingest/f0a6c53b-7ebe-41d3-94f8-ef8a60c84063',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ef421f'},body:JSON.stringify({sessionId:'ef421f',location:'script.js:refreshShopStock:end',message:'shop restock',data:{seedKeyCount:gameState.shopCurrentlyAvailableSeedKeys?.length,stockKeys:Object.keys(gameState.shopSeedStock||{}).length,gearKeys:gameState.shopCurrentlyAvailableGearKeys?.length},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-            // #endregion
             updateUI();
         };
 
@@ -1217,11 +1205,6 @@
                 }
             });
             gameState.shopCurrentlyAvailableSeedKeys.forEach(key => ensureShopSeedStockForKey(key));
-            // #region agent log
-            const sk = (gameState.shopCurrentlyAvailableSeedKeys || []).filter(k => CROP_DATA[k]?.eventWeather);
-            const miss = sk.filter(k => !Number.isFinite(gameState.shopSeedStock?.[k]));
-            fetch('http://127.0.0.1:7711/ingest/f0a6c53b-7ebe-41d3-94f8-ef8a60c84063',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ef421f'},body:JSON.stringify({sessionId:'ef421f',location:'script.js:changeWeather:after',message:'event seeds stock gap',data:{eventKeys:sk.length,missingStockFor:miss},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion
 
             addMessage(`Weather changed to: ${weatherConf.name}!`, 'info', true);
             updateUI();
@@ -2004,9 +1987,6 @@
                 mergePromoCodesIntoGameState();
                 (gameState.shopCurrentlyAvailableSeedKeys || []).forEach(key => ensureShopSeedStockForKey(key));
                 (gameState.shopCurrentlyAvailableGearKeys || []).forEach(key => ensureShopGearStockForKey(key));
-                // #region agent log
-                fetch('http://127.0.0.1:7711/ingest/f0a6c53b-7ebe-41d3-94f8-ef8a60c84063',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ef421f'},body:JSON.stringify({sessionId:'ef421f',location:'script.js:loadGame:after',message:'loaded state',data:{usedPromo:Array.isArray(gameState.usedPromoCodes)?gameState.usedPromoCodes.slice():[],seedStockKeys:Object.keys(gameState.shopSeedStock||{}).length,sCASK:gameState.shopCurrentlyAvailableSeedKeys?.length},timestamp:Date.now(),hypothesisId:'H4',runId:'post-fix'})}).catch(()=>{});
-                // #endregion
                 addMessage(`Game loaded ${rawSaveData.startsWith("MOD|") ? "(Modded)" : ""}!`, 'success', true);
                 saveCodeInputEl.value = ''; saveCodeOutputEl.value = ''; copyCodeButtonEl.disabled = true;
                 validateAndRefreshShopStock();
@@ -2524,9 +2504,6 @@
             if (!gameState) return;
             const inputEl = document.getElementById('promo-code-input');
             if (!inputEl) return;
-            // #region agent log
-            fetch('http://127.0.0.1:7711/ingest/f0a6c53b-7ebe-41d3-94f8-ef8a60c84063',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'ef421f'},body:JSON.stringify({sessionId:'ef421f',location:'script.js:redeemPromoCode:entry',message:'redeem attempt',data:{used:Array.isArray(gameState.usedPromoCodes)?gameState.usedPromoCodes.slice():[]},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
-            // #endregion
             const raw = inputEl.value.trim();
             if (!raw) {
                 setPromoCodeFeedback('Enter a promo code.', 'error');
