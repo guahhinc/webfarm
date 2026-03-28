@@ -94,11 +94,24 @@
         const SHOP_REFRESH_MIN = 80 * 1000;
         const SHOP_REFRESH_MAX = 80 * 1000;
         // Google Sheets command console
-        const GS_COMMANDS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbytyj3YG27npZEfNzLEKQXcRfBn30xkv2Hb8YUWerDKD6CFGWzXYZk0CbUHC_BJ5aXS/exec';
-        const GS_COMMANDS_POLL_INTERVAL_MS = 5000;
+        const GS_COMMANDS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwZEmZ2Tzh3Bt_WwrxdOXqhVGTUF77rEVZt-DJomVzo5a3pWb_ftu_syP0OaXoJvV87/exec';
+        const GS_COMMANDS_POLL_INTERVAL_MS = 2000;
         const GS_COMMANDS_PROCESSED_IDS_STORAGE_KEY = 'webFarmProcessedSheetCommandIds';
         const GS_COMMANDS_LAST_RECEIVED_AT_STORAGE_KEY = 'webFarmSheetConsoleLastReceivedAt';
         const GS_COMMANDS_AUTO_RESET_MS = 3 * 60 * 60 * 1000;
+        const SHOP_BUY_QTY_MODE_KEY = 'webFarmShopBuyQtyMode';
+        const SHOP_BUY_LEGACY_MAX_KEY = 'webFarmShopBuyMax';
+        /** @type {'1' | '20' | 'max'} */
+        let shopBuyQtyMode = '1';
+        try {
+            const stored = localStorage.getItem(SHOP_BUY_QTY_MODE_KEY);
+            if (stored === '1' || stored === '20' || stored === 'max') {
+                shopBuyQtyMode = stored;
+            } else if (localStorage.getItem(SHOP_BUY_LEGACY_MAX_KEY) === '1') {
+                shopBuyQtyMode = 'max';
+                localStorage.setItem(SHOP_BUY_QTY_MODE_KEY, 'max');
+            }
+        } catch (e) { /* ignore */ }
         const ALWAYS_AVAILABLE_SHOP_ITEMS = 13;
         const ULTRA_RARE_SLOTS_IN_SHOP = 3;
         const NORMAL_RARE_ROTATING_SLOTS = 7;
@@ -249,6 +262,11 @@
         let achievementPopupTimeout = null; let tipPopupTimeout = null;
         let sayBannerTimeout = null;
         let sheetCommandPollInterval = null;
+        let presenceHeartbeatInterval = null;
+        let lastPresencePingWithPollAt = 0;
+        const PRESENCE_CLIENT_ID_STORAGE_KEY = 'webFarmPresenceClientId';
+        const GS_PRESENCE_HEARTBEAT_INTERVAL_MS = 50 * 1000;
+        const PRESENCE_PING_WITH_POLL_MS = 45 * 1000;
         let activeTooltipPlotId = null;
         let selectedGearToPlace = null;
 
@@ -282,17 +300,81 @@
         const calculateChecksum = (s) => { let sum = 0; for (let i = 0; i < s.length; i++)sum = (sum + s.charCodeAt(i) * (i + 1)) % 65536; return sum.toString(16).padStart(4, '0'); }
         const calculatePlotCost = () => { if (!gameState) return PLOT_COST_BASE; const p = Math.max(0, gameState.totalPlots - INITIAL_PLOTS), f = gameState.totalPlots > 15 ? PLOT_COST_INCREASE_FACTOR * 1.1 : PLOT_COST_INCREASE_FACTOR; return Math.floor(PLOT_COST_BASE * Math.pow(f, p)); }
         const addMessage = (m, t = 'info', f = false) => { const l = m.toLowerCase(); if (!f && (l.includes('generated save'))) return; const c = messagesEl; if (!c) return; let h = c.querySelector('h2'); if (!h) { h = document.createElement('h2'); h.textContent = '📜 Log'; c.prepend(h); } const p = document.createElement('p'); const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit", second: "2-digit" }); p.textContent = `[${time}] ${m}`; p.className = `log-${t}`; h.after(p); const msgs = c.querySelectorAll('p'); if (msgs.length > LOG_PRUNE_THRESHOLD) { if (c.lastElementChild && c.lastElementChild.tagName === 'P') { c.removeChild(c.lastElementChild); } } c.scrollTop = 0; }
-        const showTopAnnouncement = (message, durationMs = 6000) => {
+        const showTopAnnouncement = (message, durationMs = 6000, variant = 'chat') => {
             if (!topAnnouncementEl) return;
             const txt = String(message || '').trim();
             if (!txt) return;
+            topAnnouncementEl.classList.remove('announce-chat', 'announce-action');
+            topAnnouncementEl.classList.add(variant === 'action' ? 'announce-action' : 'announce-chat');
             topAnnouncementEl.textContent = txt;
             topAnnouncementEl.classList.add('active');
             if (sayBannerTimeout) clearTimeout(sayBannerTimeout);
             sayBannerTimeout = setTimeout(() => {
-                topAnnouncementEl.classList.remove('active');
+                topAnnouncementEl.classList.remove('active', 'announce-chat', 'announce-action');
                 topAnnouncementEl.textContent = '';
             }, durationMs);
+        };
+        /** Same place as /say (top banner): always visible. Green for actions, white for chat. Dev log only if dev mode on. */
+        const broadcastAdminNotice = (text, logClass = 'action', durationMs = 6000, forceLog = false) => {
+            const t = String(text || '').trim();
+            if (!t) return;
+            const variant = logClass === 'chat' ? 'chat' : 'action';
+            showTopAnnouncement(t, durationMs, variant);
+            if (isDevModeEnabled && messagesEl) addMessage(t, logClass, forceLog);
+        };
+        const getOrCreatePresenceClientId = () => {
+            try {
+                let id = localStorage.getItem(PRESENCE_CLIENT_ID_STORAGE_KEY);
+                if (id && String(id).trim().length > 0) return String(id).trim();
+                id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('wf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12));
+                localStorage.setItem(PRESENCE_CLIENT_ID_STORAGE_KEY, id);
+                return id;
+            } catch (e) {
+                return 'wf-anon-' + Date.now();
+            }
+        };
+        const pingPresenceViaGet = () => {
+            if (!GS_COMMANDS_WEBAPP_URL || !gameState) return Promise.resolve();
+            const clientId = getOrCreatePresenceClientId();
+            const farmName = typeof gameState.farmName === 'string' && gameState.farmName.trim().length > 0
+                ? gameState.farmName.trim().slice(0, 32)
+                : 'Your Farm';
+            const base = GS_COMMANDS_WEBAPP_URL.replace(/\/$/, '');
+            const join = base.includes('?') ? '&' : '?';
+            const hbUrl = `${base}${join}action=heartbeat&clientId=${encodeURIComponent(clientId)}&farmName=${encodeURIComponent(farmName)}&t=${Date.now()}`;
+            return fetch(hbUrl, { method: 'GET', mode: 'cors' });
+        };
+        const postPresenceHeartbeat = async () => {
+            if (!GS_COMMANDS_WEBAPP_URL || !gameState) return;
+            const clientId = getOrCreatePresenceClientId();
+            const farmName = typeof gameState.farmName === 'string' && gameState.farmName.trim().length > 0
+                ? gameState.farmName.trim().slice(0, 32)
+                : 'Your Farm';
+            const body = JSON.stringify({ action: 'heartbeat', clientId: clientId, farmName: farmName });
+            let postOk = false;
+            try {
+                const resp = await fetch(GS_COMMANDS_WEBAPP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: body,
+                    mode: 'cors',
+                });
+                postOk = resp.ok;
+            } catch (e) {
+                /* CORS/network */
+            }
+            if (postOk) return;
+            try {
+                await pingPresenceViaGet();
+            } catch (e2) {
+                /* ignore */
+            }
+        };
+        const startPresenceHeartbeat = () => {
+            if (!GS_COMMANDS_WEBAPP_URL) return;
+            if (presenceHeartbeatInterval) clearInterval(presenceHeartbeatInterval);
+            postPresenceHeartbeat();
+            presenceHeartbeatInterval = setInterval(postPresenceHeartbeat, GS_PRESENCE_HEARTBEAT_INTERVAL_MS);
         };
         const normalizeConsoleCommandId = (rawId) => {
             const id = String(rawId || '').trim();
@@ -326,7 +408,7 @@
             } catch (e) {
                 console.warn('Failed to reset sheet console ids', e);
             }
-            if (showMessage) addMessage('Dev: Console command ID cache reset.', 'dev');
+            if (showMessage) broadcastAdminNotice('Console command ID cache reset', 'action');
         };
         const calculateGrowthMultiplier = () => { return gameState ? (GROWTH_MULTIPLIERS[gameState.growthSpeedLevel] ?? GROWTH_MULTIPLIERS[0]) : 1.0; }
         const calculateGrowthUpgradeCost = () => (!gameState || gameState.growthSpeedLevel >= MAX_GROWTH_LEVELS) ? Infinity : (GROWTH_UPGRADE_COSTS[gameState.growthSpeedLevel] ?? Infinity);
@@ -343,6 +425,14 @@
             const scale = Math.pow(10, tier * 3);
             const scaled = num / scale;
             return scaled.toFixed(2).replace(/\.?0+$/, '') + suffix;
+        };
+        const formatAdminActionMoney = (n) => {
+            if (typeof n !== 'number' || isNaN(n) || n < 0) return String(n);
+            const x = Math.abs(n);
+            if (x >= 1e9 && x % 1e9 === 0) return `${n / 1e9}B`;
+            if (x >= 1e6 && x % 1e6 === 0) return `${n / 1e6}M`;
+            if (x >= 1e3 && x % 1e3 === 0) return `${n / 1e3}K`;
+            return n.toLocaleString();
         };
         const getFormattedTimeLeft = (plotData) => { if (plotData?.state === 'growing' && plotData.growDuration) { let environmentalSpeedBoost = 1.0; if (gameState.currentWeather === 'gentle_rain' && WEATHER_CONFIG.gentle_rain.growthModifier) { environmentalSpeedBoost = WEATHER_CONFIG.gentle_rain.growthModifier; } let timeLeftMs; if (plotData.accruedGrowth !== undefined) { timeLeftMs = (plotData.growDuration - plotData.accruedGrowth) / environmentalSpeedBoost; } else { const effectiveGrowDuration = plotData.growDuration / environmentalSpeedBoost; const timeElapsed = Date.now() - plotData.plantedTime; timeLeftMs = effectiveGrowDuration - timeElapsed; } return Math.max(0, timeLeftMs) > 0 ? formatTime(Math.max(0, timeLeftMs)) : "Almost done!"; } return ""; }
         const getRandomWeight = (range) => !range ? 1.0 : Math.random() * (range[1] - range[0]) + range[0];
@@ -719,7 +809,7 @@
         }
 
 
-        const buySeeds = (key, qty = 1, evt = null) => {
+        const buySeeds = (key, qty = 1) => {
             if (!gameState || qty <= 0) return;
             const info = CROP_DATA[key];
             if (!info || info.seedCost === null) {
@@ -739,10 +829,34 @@
                 return;
             }
 
-            const isShiftBuyAll = !!(evt && evt.shiftKey);
-            const desiredQty = isShiftBuyAll ? available : qty;
-            const purchQty = Math.min(desiredQty, available);
-            const cost = info.seedCost * purchQty;
+            const co = info.seedCost;
+            let purchQty;
+            if (shopBuyQtyMode === 'max') {
+                if (co > 0) {
+                    const maxByMoney = Math.floor(gameState.money / co);
+                    purchQty = Math.min(available, maxByMoney);
+                } else {
+                    purchQty = Number.isFinite(available) ? available : 5000;
+                }
+                if (purchQty < 1) {
+                    addMessage(co > 0 ? `Not enough money for ${info.name} seeds.` : `No ${info.name} seeds available.`, 'error', true);
+                    return;
+                }
+            } else if (shopBuyQtyMode === '20') {
+                if (co > 0) {
+                    const maxByMoney = Math.floor(gameState.money / co);
+                    purchQty = Math.min(20, available, maxByMoney);
+                } else {
+                    purchQty = Math.min(20, Number.isFinite(available) ? available : 5000);
+                }
+                if (purchQty < 1) {
+                    addMessage(co > 0 ? `Not enough money for ${info.name} seeds.` : `No ${info.name} seeds available.`, 'error', true);
+                    return;
+                }
+            } else {
+                purchQty = Math.min(qty, available);
+            }
+            const cost = co * purchQty;
 
             if (cost > 0 && gameState.money < cost) {
                 addMessage(`Not enough money. Need ${cost}💰.`, 'error', true);
@@ -757,14 +871,16 @@
             }
 
             const costText = cost === 0 ? "free" : `${cost}💰`;
-            const qtyText = isShiftBuyAll ? `all ${purchQty}` : `${purchQty}`;
-            addMessage(`Bought ${qtyText} ${info.name} seed${purchQty > 1 ? 's' : ''} for ${costText}.`, 'success');
+            let qtyLabel = `${purchQty}`;
+            if (shopBuyQtyMode === 'max' && purchQty > 1) qtyLabel = `${purchQty} (max)`;
+            else if (shopBuyQtyMode === '20' && purchQty > 1) qtyLabel = `${purchQty} (up to 20)`;
+            addMessage(`Bought ${qtyLabel} ${info.name} seed${purchQty > 1 ? 's' : ''} for ${costText}.`, 'success');
             updateUI();
         }
         const buyPlot = () => { if (!gameState) return; if (gameState.totalPlots >= MAX_PLOTS) { addMessage("Max plots reached!", 'error', true); return; } const cost = calculatePlotCost(); if (gameState.money < cost) { addMessage(`Not enough money. Need ${cost}💰.`, 'error', true); return; } gameState.money -= cost; gameState.totalPlots++; gameState.plots.push({ id: gameState.plots.length, state: 'empty', crop: null, plantedTime: null, growDuration: null, specialStatuses: [], finalWeightMultiplier: null, gear: null }); addMessage(`Bought plot ${gameState.totalPlots} for ${cost}💰!`, 'success'); checkAllAchievements(); updateUI(); }
         const buyGrowthUpgrade = () => { if (!gameState) return; if (gameState.growthSpeedLevel >= MAX_GROWTH_LEVELS) { addMessage("Max growth speed!", 'error', true); return; } const cost = calculateGrowthUpgradeCost(); if (gameState.money < cost) { addMessage(`Not enough money. Need ${cost}💰.`, 'error', true); return; } gameState.money -= cost; gameState.growthSpeedLevel++; addMessage(`Growth speed Lvl ${gameState.growthSpeedLevel}! Crops grow ${((1 - calculateGrowthMultiplier()) * 100).toFixed(0)}% faster.`, 'success'); checkAllAchievements(); updateUI(); }
 
-        const buyGear = (key, qty = 1, evt = null) => {
+        const buyGear = (key, qty = 1) => {
             if (!gameState || qty <= 0) return;
             const info = GEAR_DATA[key];
             if (!info) { addMessage('Unknown gear.', 'error', true); return; }
@@ -780,8 +896,24 @@
                 updateUI();
                 return;
             }
-            const isShiftBuyAll = !!(evt && evt.shiftKey);
-            const buyQty = isShiftBuyAll ? stockLeft : qty;
+            let buyQty;
+            if (shopBuyQtyMode === 'max') {
+                const maxByMoney = Math.floor(gameState.money / info.cost);
+                buyQty = Math.min(stockLeft, maxByMoney);
+                if (buyQty < 1) {
+                    addMessage(gameState.money < info.cost ? `Not enough money for ${info.name}.` : `Cannot buy ${info.name}.`, 'error', true);
+                    return;
+                }
+            } else if (shopBuyQtyMode === '20') {
+                const maxByMoney = Math.floor(gameState.money / info.cost);
+                buyQty = Math.min(20, stockLeft, maxByMoney);
+                if (buyQty < 1) {
+                    addMessage(gameState.money < info.cost ? `Not enough money for ${info.name}.` : `Cannot buy ${info.name}.`, 'error', true);
+                    return;
+                }
+            } else {
+                buyQty = qty;
+            }
             if (stockLeft < buyQty) { addMessage(`Not enough in stock. Only ${stockLeft} left!`, 'error', true); return; }
             const cost = info.cost * buyQty;
             if (gameState.money < cost) { addMessage(`Not enough money. Need ${formatMoney(cost)}💰.`, 'error', true); return; }
@@ -793,7 +925,10 @@
             }
             if (!gameState.inventory.gears) gameState.inventory.gears = {};
             gameState.inventory.gears[key] = (gameState.inventory.gears[key] || 0) + buyQty;
-            addMessage(`Bought ${isShiftBuyAll ? 'all ' : ''}${buyQty} ${info.name} for ${formatMoney(cost)}💰.`, 'success');
+            let qtyLabel = `${buyQty}`;
+            if (shopBuyQtyMode === 'max' && buyQty > 1) qtyLabel = `${buyQty} (max)`;
+            else if (shopBuyQtyMode === '20' && buyQty > 1) qtyLabel = `${buyQty} (up to 20)`;
+            addMessage(`Bought ${qtyLabel} ${info.name} for ${formatMoney(cost)}💰.`, 'success');
             updateUI();
         };
 
@@ -1427,6 +1562,25 @@
             inventoryTooltipEl.style.top = `${y}px`;
         };
 
+        const syncShopBuyModeButtons = () => {
+            const one = document.getElementById('shop-buy-mode-one');
+            const twenty = document.getElementById('shop-buy-mode-twenty');
+            const max = document.getElementById('shop-buy-mode-max');
+            if (!one || !twenty || !max) return;
+            one.classList.toggle('active', shopBuyQtyMode === '1');
+            twenty.classList.toggle('active', shopBuyQtyMode === '20');
+            max.classList.toggle('active', shopBuyQtyMode === 'max');
+        };
+        const setShopBuyQtyMode = (mode) => {
+            if (mode !== '1' && mode !== '20' && mode !== 'max') return;
+            shopBuyQtyMode = mode;
+            try {
+                localStorage.setItem(SHOP_BUY_QTY_MODE_KEY, shopBuyQtyMode);
+            } catch (e) { /* ignore */ }
+            syncShopBuyModeButtons();
+            updateUI();
+        };
+
         let uiUpdateTimeout = null;
         let lastUpdateTime = 0;
         const updateUI = () => {
@@ -1444,6 +1598,7 @@
             }
 
             if (!gameState) { console.error("UI Update Fail: No game state."); return; }
+            syncShopBuyModeButtons();
             const farmNameHeadingEl = document.getElementById('farm-name');
             if (farmNameHeadingEl) {
                 farmNameHeadingEl.textContent = gameState.farmName || 'Your Farm';
@@ -1654,11 +1809,19 @@
                     const titleText = `Sold out. (Refreshes in: ${formatTime(timeToRefresh)})`;
                     return `<li class="plant-button shop-seed-unavailable" title="${titleText}"><span class="shop-tile-icon">${c.icon}</span><span class="shop-tile-name">${c.name}</span><span class="shop-tile-price">${costText}</span></li>`;
                 } else {
-                    const titleText = co === 0
-                        ? `Get 1 for Free (Shift+Click to buy all stock: ${stockRemaining})`
-                        : `Buy 1 ${c.name} for ${totalCost.toLocaleString()}💰 (Shift+Click: buy all stock ${stockRemaining})`;
+                    const titleText = shopBuyQtyMode === 'max'
+                        ? (co === 0
+                            ? (Number.isFinite(stockRemaining) ? `Take all free stock (${stockRemaining})` : 'Take free seeds (capped per tap)')
+                            : `Buy as many ${c.name} as you can afford (up to ${stockRemaining} in stock)`)
+                        : shopBuyQtyMode === '20'
+                            ? (co === 0
+                                ? (Number.isFinite(stockRemaining) ? `Take up to 20 free (${stockRemaining} in stock)` : 'Take up to 20 free seeds')
+                                : `Buy up to 20 ${c.name} (stock ${stockRemaining}, money permitting)`)
+                            : (co === 0
+                                ? 'Get 1 free'
+                                : `Buy 1 ${c.name} for ${totalCost.toLocaleString()}💰`);
                     const isDisabledClass = (co > 0 && gameState.money < totalCost) ? 'disabled' : '';
-                    return `<li class="plant-button ${isDisabledClass}" onclick="buySeeds('${k}',1,event)" title="${titleText}"><span class="shop-tile-icon">${c.icon}</span><span class="shop-tile-name">${c.name}</span>${stockLabel ? `<span class="shop-tile-stock">${stockLabel}</span>` : ''}<span class="shop-tile-price">${costText}</span></li>`;
+                    return `<li class="plant-button ${isDisabledClass}" onclick="buySeeds('${k}',1)" title="${titleText}"><span class="shop-tile-icon">${c.icon}</span><span class="shop-tile-name">${c.name}</span>${stockLabel ? `<span class="shop-tile-stock">${stockLabel}</span>` : ''}<span class="shop-tile-price">${costText}</span></li>`;
                 }
             }).join('');
 
@@ -1689,8 +1852,12 @@
                         const stockLabel = `x${stockRemaining}`;
                         const totalCost = g.cost;
                         const isDisabledClass = gameState.money < totalCost ? 'disabled' : '';
-                        const titleText = `Buy 1 ${g.name} for ${formatMoney(totalCost)}💰 - ${g.description} (Shift+Click: buy all stock ${stockRemaining})`;
-                        return `<li class="plant-button ${isDisabledClass}" onclick="buyGear('${k}', 1, event)" title="${titleText}"><span class="shop-tile-icon">${g.icon}</span><span class="shop-tile-name">${g.name}</span><span class="shop-tile-stock">${stockLabel}</span><span class="shop-tile-price">${formatMoney(totalCost)}💰</span></li>`;
+                        const titleText = shopBuyQtyMode === 'max'
+                            ? `Buy as many ${g.name} as you can afford (up to ${stockRemaining} in stock) — ${g.description}`
+                            : shopBuyQtyMode === '20'
+                                ? `Buy up to 20 ${g.name} (stock ${stockRemaining}, money permitting) — ${g.description}`
+                                : `Buy 1 ${g.name} for ${formatMoney(totalCost)}💰 — ${g.description}`;
+                        return `<li class="plant-button ${isDisabledClass}" onclick="buyGear('${k}', 1)" title="${titleText}"><span class="shop-tile-icon">${g.icon}</span><span class="shop-tile-name">${g.name}</span><span class="shop-tile-stock">${stockLabel}</span><span class="shop-tile-price">${formatMoney(totalCost)}💰</span></li>`;
                     }
                 }).join('');
             }
@@ -2089,22 +2256,19 @@
             const gearsBtn = document.getElementById('shop-tab-gears');
             const fruitsSection = document.getElementById('shop-fruits-section');
             const gearsSection = document.getElementById('shop-gears-section');
-            const shopSharedHeader = document.getElementById('shop-shared-header');
-
             if (tab === 'fruits') {
                 if (fruitsBtn) fruitsBtn.classList.add('active');
                 if (gearsBtn) gearsBtn.classList.remove('active');
                 if (fruitsSection) fruitsSection.style.display = 'block';
                 if (gearsSection) gearsSection.style.display = 'none';
-                if (shopSharedHeader) shopSharedHeader.classList.remove('shop-gears-active');
             } else if (tab === 'gears') {
                 if (gearsBtn) gearsBtn.classList.add('active');
                 if (fruitsBtn) fruitsBtn.classList.remove('active');
                 if (gearsSection) gearsSection.style.display = 'block';
                 if (fruitsSection) fruitsSection.style.display = 'none';
-                if (shopSharedHeader) shopSharedHeader.classList.add('shop-gears-active');
             }
         };
+
         const initializeNewGame = () => {
             isModActive = false; activeModChecksum = null;
             CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA));
@@ -2146,13 +2310,13 @@
                 switch (cmd) {
                     case 'addmoney': {
                         const amt = parseInt(params[0], 10);
-                        if (!isNaN(amt) && amt >= 0) { gameState.money += amt; needsUI = true; addMessage(`Dev: Added Money +${amt}💰.`, 'dev'); }
+                        if (!isNaN(amt) && amt >= 0) { gameState.money += amt; needsUI = true; broadcastAdminNotice(`+${formatAdminActionMoney(amt)} Money`, 'action'); }
                         else addMessage("Usage: /addmoney [amount]", 'error');
                     } break;
                     case 'say': {
                         const msg = params.join(' ').trim();
                         if (!msg) addMessage("Usage: /say [text]", 'error');
-                        else { showTopAnnouncement(msg, 6000); addMessage(`Dev: Broadcast '${msg}'.`, 'dev'); }
+                        else broadcastAdminNotice(msg, 'chat');
                     } break;
                     case 'give': {
                         // /give now always gives produce form.
@@ -2176,7 +2340,9 @@
                         const itemWeightRange = baseInfo.weightRange || [1.0, 1.0];
                         const avgItemWeight = (itemWeightRange[0] + itemWeightRange[1]) / 2;
                         gameState.inventory.produce[targetInvKey].totalWeight += giveAmount * avgItemWeight;
-                        addMessage(`Dev: Gave ${giveAmount} ${baseInfo.name} (produce).`, 'dev');
+                        const statusLabels = specialGiveStatuses.map(s => SPECIAL_STATUSES[s]?.name || s).join(' ');
+                        const label = statusLabels ? `${statusLabels} ${baseInfo.name}` : baseInfo.name;
+                        broadcastAdminNotice(`Received ${giveAmount} ${label}`, 'action');
                         needsUI = true;
                     } break;
                     case 'giveseed': {
@@ -2185,41 +2351,45 @@
                         if (!CROP_DATA[key] || CROP_DATA[key].seedCost === null) { addMessage("Usage: /giveseed [seed_key] [amount]", 'error'); break; }
                         gameState.inventory.seeds[key] = (gameState.inventory.seeds[key] || 0) + amt;
                         needsUI = true;
-                        addMessage(`Dev: Gave ${amt} ${CROP_DATA[key].name} seeds.`, 'dev');
+                        broadcastAdminNotice(`Received ${amt} ${CROP_DATA[key].name} ${amt === 1 ? 'Seed' : 'Seeds'}`, 'action');
                     } break;
                     case 'addseed': {
                         const key = (params[0] || '').toLowerCase(); const amt = parseInt(params[1], 10);
                         if (!CROP_DATA[key] || CROP_DATA[key].seedCost === null || isNaN(amt) || amt <= 0) { addMessage("Usage: /addseed [seed_key] [amount]", 'error'); break; }
-                        gameState.inventory.seeds[key] = (gameState.inventory.seeds[key] || 0) + amt; needsUI = true; addMessage(`Dev: Added ${amt} ${CROP_DATA[key].name} seeds.`, 'dev');
+                        gameState.inventory.seeds[key] = (gameState.inventory.seeds[key] || 0) + amt; needsUI = true; broadcastAdminNotice(`Received ${amt} ${CROP_DATA[key].name} ${amt === 1 ? 'Seed' : 'Seeds'}`, 'action');
                     } break;
                     case 'addgear': {
                         const key = (params[0] || '').toLowerCase(); const amt = parseInt(params[1], 10);
                         if (!GEAR_DATA[key] || isNaN(amt) || amt <= 0) { addMessage("Usage: /addgear [gear_key] [amount]", 'error'); break; }
-                        gameState.inventory.gears[key] = (gameState.inventory.gears[key] || 0) + amt; needsUI = true; addMessage(`Dev: Added ${amt} ${GEAR_DATA[key].name}.`, 'dev');
+                        gameState.inventory.gears[key] = (gameState.inventory.gears[key] || 0) + amt; needsUI = true; broadcastAdminNotice(`Received ${amt} ${GEAR_DATA[key].name}`, 'action');
                     } break;
                     case 'grow': {
                         const itemKey = params[0]?.toLowerCase(); if (!itemKey) { addMessage("Usage: /grow [crop_key]", 'error'); break; }
                         let grown = false; gameState.plots.forEach(p => { if (p.state === 'growing' && p.crop === itemKey) { p.state = 'ready'; p.plantedTime = null; p.growDuration = null; grown = true; } });
-                        addMessage(grown ? `Dev: Grew ${itemKey}.` : `No growing ${itemKey}.`, grown ? 'dev' : 'error'); needsUI = grown;
+                        const cropLabel = CROP_DATA[itemKey]?.name || itemKey;
+                        if (grown) broadcastAdminNotice(`Grew ${cropLabel}`, 'action');
+                        else addMessage(`No growing ${cropLabel}.`, 'error');
+                        needsUI = grown;
                     } break;
                     case 'growall': {
                         let count = 0; gameState.plots.forEach(p => { if (p.state === 'growing') { p.state = 'ready'; p.plantedTime = null; p.growDuration = null; count++; } });
-                        addMessage(count > 0 ? `Dev: Grew all ${count} plots.` : `No plots growing.`, count > 0 ? 'dev' : 'info'); needsUI = count > 0;
+                        if (count > 0) { broadcastAdminNotice(`Grew all ${count} crops`, 'action'); needsUI = true; }
+                        else addMessage('No plots growing.', 'info');
                     } break;
                     case 'weather': {
                         if (params.length > 0 && WEATHER_CONFIG[params[0].toLowerCase()]) {
                             gameState.currentWeather = params[0].toLowerCase();
                             gameState.weatherChangeTimestamp = Date.now() + getRandomDuration(WEATHER_CONFIG[gameState.currentWeather].duration_ms);
-                            addMessage(`Dev: Weather set to ${WEATHER_CONFIG[gameState.currentWeather].name}.`, 'dev');
+                            broadcastAdminNotice(`Weather set to ${WEATHER_CONFIG[gameState.currentWeather].name}`, 'action');
                             needsUI = true;
                         } else addMessage(`Usage: /weather [${Object.keys(WEATHER_CONFIG).join('|')}]`, 'error');
                     } break;
-                    case 'refreshshop': { if (gameState) { gameState.shopNextRefreshTimestamp = Date.now() + 1000; addMessage('Dev: Shop refresh timer set to 1 second.', 'dev'); needsUI = true; } } break;
+                    case 'refreshshop': { if (gameState) { gameState.shopNextRefreshTimestamp = Date.now() + 1000; broadcastAdminNotice('Shop refresh soon', 'action'); needsUI = true; } } break;
                     case 'setstock': {
                         const type = (params[0] || '').toLowerCase(); const key = (params[1] || '').toLowerCase(); const amt = parseInt(params[2], 10);
                         if (isNaN(amt) || amt < 0) { addMessage("Usage: /setstock [seed|gear] [key] [amount]", 'error'); break; }
-                        if (type === 'seed' && CROP_DATA[key] && CROP_DATA[key].seedCost !== null) { gameState.shopSeedStock[key] = amt; if (amt > 0 && !gameState.shopCurrentlyAvailableSeedKeys.includes(key)) gameState.shopCurrentlyAvailableSeedKeys.push(key); needsUI = true; addMessage(`Dev: Seed stock ${key}=${amt}.`, 'dev'); }
-                        else if (type === 'gear' && GEAR_DATA[key]) { gameState.shopGearStock[key] = amt; if (amt > 0 && !gameState.shopCurrentlyAvailableGearKeys.includes(key)) gameState.shopCurrentlyAvailableGearKeys.push(key); needsUI = true; addMessage(`Dev: Gear stock ${key}=${amt}.`, 'dev'); }
+                        if (type === 'seed' && CROP_DATA[key] && CROP_DATA[key].seedCost !== null) { gameState.shopSeedStock[key] = amt; if (amt > 0 && !gameState.shopCurrentlyAvailableSeedKeys.includes(key)) gameState.shopCurrentlyAvailableSeedKeys.push(key); needsUI = true; broadcastAdminNotice(`Stocked ${CROP_DATA[key].name} x${amt}`, 'action'); }
+                        else if (type === 'gear' && GEAR_DATA[key]) { gameState.shopGearStock[key] = amt; if (amt > 0 && !gameState.shopCurrentlyAvailableGearKeys.includes(key)) gameState.shopCurrentlyAvailableGearKeys.push(key); needsUI = true; broadcastAdminNotice(`Stocked ${GEAR_DATA[key].name} x${amt}`, 'action'); }
                         else addMessage("Usage: /setstock [seed|gear] [key] [amount]", 'error');
                     } break;
                     case 'stock': {
@@ -2232,33 +2402,34 @@
                         gameState.shopSeedStock[key] = amt;
                         if (amt > 0 && !gameState.shopCurrentlyAvailableSeedKeys.includes(key)) gameState.shopCurrentlyAvailableSeedKeys.push(key);
                         if (amt <= 0) gameState.shopCurrentlyAvailableSeedKeys = gameState.shopCurrentlyAvailableSeedKeys.filter(k => k !== key);
-                        addMessage(`Dev: Seed stock ${key}=${amt}.`, 'dev');
+                        broadcastAdminNotice(`Stocked ${CROP_DATA[key].name} x${amt}`, 'action');
                         needsUI = true;
                     } break;
                     case 'achieve':
                     case 'achievement': {
                         const key = params[0]?.toLowerCase();
-                        if (key === 'all' || key === '*') { let uC = 0; Object.keys(ACHIEVEMENT_DATA).forEach(k => { if (!gameState.achievements[k]) { gameState.achievements[k] = true; uC++; } }); addMessage(`Dev: Unlocked ${uC} achievements.`, 'dev'); needsUI = true; }
-                        else if (ACHIEVEMENT_DATA[key]) { if (!gameState.achievements[key]) { gameState.achievements[key] = true; addMessage(`Dev: Unlocked '${key}'.`, 'dev'); needsUI = true; } else addMessage(`Ach '${key}' already done.`, 'info'); }
+                        if (key === 'all' || key === '*') { let uC = 0; Object.keys(ACHIEVEMENT_DATA).forEach(k => { if (!gameState.achievements[k]) { gameState.achievements[k] = true; uC++; } }); broadcastAdminNotice(`Unlocked ${uC} achievements`, 'action'); needsUI = true; }
+                        else if (ACHIEVEMENT_DATA[key]) { if (!gameState.achievements[key]) { gameState.achievements[key] = true; broadcastAdminNotice(`Unlocked ${ACHIEVEMENT_DATA[key].name}`, 'action'); needsUI = true; } else addMessage(`Ach '${key}' already done.`, 'info'); }
                         else addMessage(`Unknown ach key '${key}'. /achieve [key|all]`, 'error');
                     } break;
-                    case 'resetquests': { generateNewDailyQuests(); addMessage('Dev: Daily quests reset.', 'dev'); needsUI = true; } break;
+                    case 'resetquests': { generateNewDailyQuests(); broadcastAdminNotice('Daily quests reset', 'action'); needsUI = true; } break;
                     case 'completequests': {
-                        if (gameState.activeDailyQuests) { gameState.activeDailyQuests.forEach(q => { const qDef = QUEST_DEFINITIONS.find(d => d.id === q.questId); if (qDef) q.progress = qDef.targetAmount; q.completed = true; }); addMessage('Dev: All active quests marked complete.', 'dev'); needsUI = true; }
+                        if (gameState.activeDailyQuests) { gameState.activeDailyQuests.forEach(q => { const qDef = QUEST_DEFINITIONS.find(d => d.id === q.questId); if (qDef) q.progress = qDef.targetAmount; q.completed = true; }); broadcastAdminNotice('All active quests complete', 'action'); needsUI = true; }
                     } break;
                     case 'rebirthset': {
                         const target = parseInt(params[0], 10);
                         if (isNaN(target) || target < 0 || target > MAX_REBIRTHS) { addMessage(`Usage: /rebirthset [0-${MAX_REBIRTHS}]`, 'error'); break; }
                         gameState.rebirthCount = target;
                         gameState.rebirthMultiplier = getRebirthMultiplier(target);
-                        addMessage(`Dev: Rebirth set to ${target}.`, 'dev');
+                        broadcastAdminNotice(`Rebirth set to ${target}`, 'action');
                         needsUI = true;
                     } break;
                     case 'resetconsole': {
                         resetSheetConsoleIds(true);
                     } break;
                     case 'help': {
-                        addMessage(["--- Dev Commands ---", "/addmoney [amt]", "/say [text]", "/give [status...] [produce] [amt=1]", "/giveseed [seed] [amt=1]", "/addseed [seed] [amt]", "/addgear [gear] [amt]", "/grow [crop]", "/growall", "/weather [key]", "/refreshshop", "/stock [seed] [amt=1]", "/setstock [seed|gear] [key] [amt]", "/achieve [key|all]", "/resetquests", "/completequests", `/rebirthset [0-${MAX_REBIRTHS}]`, "/resetconsole", "/help"].join('\n'), 'dev', true);
+                        const helpText = ["--- Dev Commands ---", "/addmoney [amt]", "/say [text]", "/give [status...] [produce] [amt=1]", "/giveseed [seed] [amt=1]", "/addseed [seed] [amt]", "/addgear [gear] [amt]", "/grow [crop]", "/growall", "/weather [key]", "/refreshshop", "/stock [seed] [amt=1]", "/setstock [seed|gear] [key] [amt]", "/achieve [key|all]", "/resetquests", "/completequests", `/rebirthset [0-${MAX_REBIRTHS}]`, "/resetconsole", "/help"].join('\n');
+                        broadcastAdminNotice(helpText, 'action', 14000, true);
                     } break;
                     default: addMessage(`Unknown cmd: /${cmd}. /help for options.`, 'error'); break;
                 }
@@ -2273,12 +2444,17 @@
         const pollGoogleSheetCommands = async () => {
             if (!GS_COMMANDS_WEBAPP_URL || !gameState) return;
             try {
+                const nowPing = Date.now();
+                if (nowPing - lastPresencePingWithPollAt >= PRESENCE_PING_WITH_POLL_MS) {
+                    lastPresencePingWithPollAt = nowPing;
+                    pingPresenceViaGet().catch(() => { });
+                }
                 // Auto-reset command ID cache every 3h from the last received command.
                 const lastReceivedRaw = localStorage.getItem(GS_COMMANDS_LAST_RECEIVED_AT_STORAGE_KEY);
                 const lastReceivedAt = parseInt(lastReceivedRaw || '0', 10);
                 if (!isNaN(lastReceivedAt) && lastReceivedAt > 0 && (Date.now() - lastReceivedAt) >= GS_COMMANDS_AUTO_RESET_MS) {
                     resetSheetConsoleIds(false);
-                    addMessage('Dev: Console command ID cache auto-reset after 3 hours.', 'dev');
+                    broadcastAdminNotice('Console command ID cache auto-reset after 3 hours.', 'action', 8000);
                 }
                 const resp = await fetch(`${GS_COMMANDS_WEBAPP_URL}${GS_COMMANDS_WEBAPP_URL.includes('?') ? '&' : '?'}t=${Date.now()}`);
                 if (!resp.ok) return;
@@ -2300,7 +2476,7 @@
                             processed = new Set([id]);
                             saveProcessedSheetCommandIds(processed);
                             try { localStorage.setItem(GS_COMMANDS_LAST_RECEIVED_AT_STORAGE_KEY, String(Date.now())); } catch (e) { }
-                            addMessage('Dev: Console command ID cache reset.', 'dev');
+                            broadcastAdminNotice('Console command ID cache reset', 'action');
                             continue;
                         }
                         executeAdminCommandText(cmdText, 'sheet');
@@ -2588,8 +2764,7 @@
                 title: 'v1.2.7 A Little Easier',
                 changes: [
                     'Rarer Fruits And Gear Stock Slightly More',
-                    'Shift+Click to Purchase All Stock',
-                    'Buy Quantity Removed',
+                    'Shop: 1 / Max buy toggle (fill what you can afford, up to stock)',
                     'Slightly Easier Progression',
                     'Later Rebirths Cost Slightly Less',
                     'Added Update Log Menu',
@@ -2713,7 +2888,9 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initGame();
+            syncShopBuyModeButtons();
             startGoogleSheetCommandPolling();
+            startPresenceHeartbeat();
         });
 
         // Copyright Guahh Inc 2026

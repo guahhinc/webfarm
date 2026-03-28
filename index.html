@@ -42,15 +42,18 @@
             <div id="actions" style="display:none;"></div>
             <div id="shop">
                 <h3><span style="font-size:1.2em">🛒</span> Shop</h3>
-                <div id="shop-tabs" style="display:flex; gap:5px; margin-bottom:12px;">
-                    <button id="shop-tab-fruits" class="qty-toggle-btn active" onclick="setShopTab('fruits')"
-                        style="flex:1; padding:6px;">🌾 Crops</button>
-                    <button id="shop-tab-gears" class="qty-toggle-btn" onclick="setShopTab('gears')"
-                        style="flex:1; padding:6px;">⚙️ Gears</button>
+                <div id="shop-tabs" class="shop-tabs">
+                    <button type="button" id="shop-tab-fruits" class="qty-toggle-btn active" onclick="setShopTab('fruits')">🌾 Crops</button>
+                    <button type="button" id="shop-tab-gears" class="qty-toggle-btn" onclick="setShopTab('gears')">⚙️ Gears</button>
                 </div>
-                <div id="shop-shared-header" style="margin-bottom:8px;">
-                    <h4>Shop Status: <span id="shop-refresh-timer"
-                            style="font-weight:normal; font-size:0.85em; color:var(--log-info-color);"></span></h4>
+                <div id="shop-shared-header" class="shop-shared-header">
+                    <div id="shop-buy-mode-row" class="shop-buy-mode-row" role="group" aria-label="Purchase quantity">
+                        <span class="shop-buy-mode-label">Buy</span>
+                        <button type="button" id="shop-buy-mode-one" class="qty-toggle-btn active" onclick="setShopBuyQtyMode('1')">1</button>
+                        <button type="button" id="shop-buy-mode-twenty" class="qty-toggle-btn" onclick="setShopBuyQtyMode('20')" title="Buy up to 20 at once (stock and money permitting)">20</button>
+                        <button type="button" id="shop-buy-mode-max" class="qty-toggle-btn" onclick="setShopBuyQtyMode('max')" title="Buy as many as you can afford (up to stock)">Max</button>
+                    </div>
+                    <h4>Shop Status: <span id="shop-refresh-timer" class="shop-refresh-timer"></span></h4>
                 </div>
                 <div id="shop-fruits-section">
                     <h4>🌱 Seeds:</h4>

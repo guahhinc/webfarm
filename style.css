@@ -25,6 +25,8 @@
             --log-error-color: #e74c3c;
             --log-info-color: #bdc3c7;
             --log-gold-color: #ffd700;
+            --log-action-color: #5fd87a;
+            --log-chat-color: #ffffff;
             --input-bg: #2c3e50;
             --input-border: #5a7a9a;
             --button-text-color: white;
@@ -268,11 +270,21 @@
             min-width: 180px;
             max-width: min(780px, 92vw);
             text-align: center;
-            color: var(--heading-color);
             font-weight: 700;
             opacity: 0;
             pointer-events: none;
             transition: opacity 160ms ease;
+            white-space: pre-wrap;
+            max-height: min(320px, 70vh);
+            overflow-y: auto;
+        }
+
+        #top-announcement.announce-chat {
+            color: var(--log-chat-color);
+        }
+
+        #top-announcement.announce-action {
+            color: var(--log-action-color);
         }
 
         #top-announcement.active {
@@ -298,6 +310,50 @@
             min-width: 350px;
             display: flex;
             flex-direction: column
+        }
+
+        .shop-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .shop-tabs .qty-toggle-btn {
+            flex: 1;
+            padding: 8px 10px;
+            min-height: 40px;
+        }
+
+        .shop-shared-header {
+            margin-bottom: 8px;
+        }
+
+        .shop-buy-mode-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            background: var(--body-bg);
+            border-radius: 6px;
+            border: 1px solid var(--section-border);
+        }
+
+        .shop-buy-mode-label {
+            font-size: 0.9em;
+            color: var(--log-info-color);
+        }
+
+        .shop-buy-mode-row .qty-toggle-btn {
+            min-width: 44px;
+            padding: 6px 14px;
+        }
+
+        .shop-refresh-timer {
+            font-weight: normal;
+            font-size: 0.85em;
+            color: var(--log-info-color);
         }
 
         @media (min-width:950px) {
@@ -742,10 +798,20 @@
             font-weight: 700
         }
 
+        #messages p.log-action {
+            color: var(--log-action-color);
+            font-weight: 600;
+        }
+
+        #messages p.log-chat {
+            color: var(--log-chat-color);
+            font-weight: 500;
+        }
+
         #messages p.log-dev {
-            color: var(--link-color);
-            font-family: monospace;
-            font-weight: bold
+            color: var(--log-action-color);
+            font-family: inherit;
+            font-weight: 600;
         }
 
         #save-load h2,
@@ -1203,11 +1269,6 @@
             font-family: inherit;
             color: inherit;
             cursor: pointer;
-        }
-
-        /* Hide seed quantity controls when viewing gear shop */
-        .shop-gears-active #purchase-qty-seeds {
-            display: none !important;
         }
 
         #seed-inventory li.seed-selected,
