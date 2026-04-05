@@ -25,6 +25,7 @@
         </div>
         <div class="top-bar-actions">
             <button type="button" id="update-log-button" class="top-bar-action-button" onclick="openUpdateLogPopup()" title="Update Log">📜</button>
+            <button type="button" id="leaderboard-button" class="top-bar-action-button" title="Leaderboard">🏆</button>
             <button type="button" id="settings-gear-button" class="top-bar-action-button" onclick="openSettingsPopup()" title="Settings">⚙️</button>
         </div>
     </header>
@@ -195,6 +196,10 @@
                     <button type="button" onclick="redeemPromoCode()">Redeem</button>
                     <p id="promo-code-feedback" class="promo-code-feedback" role="status" aria-live="polite"></p>
                 </div>
+                <div class="settings-row" id="settings-leaderboard-row" style="display: none;">
+                    <button type="button" id="leave-leaderboard-button">Leave Online</button>
+                    <span class="settings-warning-text">Stops syncing your farm to the public board. You can rejoin later from the leaderboard button.</span>
+                </div>
                 <div class="settings-row">
                     <button id="erase-progress-button" onclick="eraseAllProgress()">
                         Erase All Progress
@@ -218,9 +223,18 @@
         </div>
     </div>
 
+    <div id="leaderboard-backdrop">
+        <div id="leaderboard-modal">
+            <div class="settings-modal-header">
+                <h2><span style="font-size:1.2em">🏆</span> Leaderboard</h2>
+                <button type="button" class="settings-modal-close" id="leaderboard-close-button" title="Close">✖</button>
+            </div>
+            <div id="leaderboard-content" class="leaderboard-content"></div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
-    <p style="text-align:center; font-size:0.75em; color:#7f8c8d; margin:15px 0 10px; opacity:0.7;">Web Farm v1.2.7 | Made by Guahh</p>
+    <p style="text-align:center; font-size:0.75em; color:#7f8c8d; margin:15px 0 10px; opacity:0.7;">Web Farm v1.2.8 | Made by Guahh</p>
 </body>
 
 </html>

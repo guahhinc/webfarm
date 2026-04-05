@@ -34,6 +34,8 @@
             'fig': { name: 'Fig', icon: '<img src="http://raw.githubusercontent.com/guahhinc/webfarm/main/fig.png" alt="Fig" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 50000000, sellPrice: 61000000, growTime: 520000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.14 },
             'star_fruit': { name: 'Star Fruit', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/star_fruit.png" alt="Star Fruit" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 750000000, sellPrice: 1200000000, growTime: 540000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.13 },
             'rambutan': { name: 'Rambutan', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/rambutan.png" alt="Rambutan" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 3000000000, sellPrice: 4600000000, growTime: 580000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.1 },
+            'mangosteen': { name: 'Mangosteen', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/mangosteen.png" alt="Mangosteen" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 15000000000, sellPrice: 23000000000, growTime: 600000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.08 },
+            'passionfruit': { name: 'Passionfruit', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/passionfruit.png" alt="Passionfruit" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 100000000000, sellPrice: 155000000000, growTime: 620000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.06 },
             'apple': { name: 'Apple', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/apple.png" alt="Apple" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: null, sellPrice: 135, growTime: null, weightRange: [0.9, 1.1], rarity: 'common' },
             'banana': { name: 'Banana', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/banana.png" alt="Banana" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: null, sellPrice: 220, growTime: null, weightRange: [0.85, 1.15], rarity: 'common' },
             'orange': { name: 'Orange', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/orange.png" alt="Orange" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: null, sellPrice: 175, growTime: null, weightRange: [0.9, 1.1], rarity: 'common' },
@@ -66,7 +68,7 @@
             'own_5_plots': { name: "Land Owner", icon: "🏞️", desc: "Own 5 farm plots.", rwd: 200, type: 'state.p', thr: 5 },
             'own_10_plots': { name: "Farm Baron", icon: "🏡", desc: "Own 10 farm plots.", rwd: 500, type: 'state.p', thr: 10 },
             'rebirth_1': { name: "First Rebirth", icon: "🔄", desc: "Complete your first Rebirth.", rwd: 500000, type: 'state.rb', thr: 1 },
-            'upgrade_growth_max': { name: "Max Velocity", icon: "🚀", desc: `Reach max growth speed (Level 7).`, rwd: 5000, type: 'state.g', thr: 7 },
+            'upgrade_growth_max': { name: "Max Velocity", icon: "🚀", desc: `Reach max growth speed (Level 8).`, rwd: 5000, type: 'state.g', thr: 8 },
             'harvest_silver': { name: "Silver Lining", icon: "🥈", desc: "Harvest your first Silver crop.", rwd: 3000, type: 'stats.mut', tgt: 'silver', thr: 1 },
             'complete_all': { name: "Farm Master", icon: "👑", desc: "Complete all other achievements.", rwd: 10000000, type: 'all' }
         };
@@ -85,7 +87,7 @@
 
         const INITIAL_PLOTS = 3; const MAX_PLOTS = 36; const PLOT_COST_BASE = 75; const PLOT_COST_INCREASE_FACTOR = 1.4;
         const TICK_INTERVAL = 100; const AUTOSAVE_INTERVAL = 5000;
-        const SAVE_CODE_VERSION = '1.2.7';
+        const SAVE_CODE_VERSION = '1.2.8';
         const LOG_PRUNE_THRESHOLD = 80;
         const XOR_SAVE_KEY = 'webfarmkey_34252465488682';
         const REDEEMED_PROMOS_STORAGE_KEY = 'webFarmRedeemedPromoCodes';
@@ -93,8 +95,18 @@
         const DEV_ACTIVATION_CODE = 'dev-2588624836783023489768723895438973895';
         const SHOP_REFRESH_MIN = 80 * 1000;
         const SHOP_REFRESH_MAX = 80 * 1000;
-        // Google Sheets command console
-        const GS_COMMANDS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwZEmZ2Tzh3Bt_WwrxdOXqhVGTUF77rEVZt-DJomVzo5a3pWb_ftu_syP0OaXoJvV87/exec';
+        // Google Apps Script web app: poll Commands sheet; POST leaderboard scores; GET leaderboard
+        const GS_COMMANDS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxu1yFmY3zxyvNNeXcghvRn0opjY59VfanJbe7USylT0985RS5qQNbdv67YAC63-cyA/exec';
+        /** Optional: set to match Script property LEADERBOARD_SECRET in code.gs (leave '' if unset). */
+        const GS_LEADERBOARD_SECRET = '';
+        const GS_LEADERBOARD_SUBMIT_INTERVAL_MS = 15 * 1000;
+        const LEADERBOARD_MODAL_REFRESH_MS = 15 * 1000;
+        const LEADERBOARD_ONLINE_CONSENT_KEY = 'webFarmLeaderboardOnlineConsent';
+        const LEADERBOARD_CACHE_STORAGE_KEY = 'webFarmLeaderboardSnapshot';
+        const TIP_DISPLAY_MS = 18000;
+        const hasLeaderboardOnlineConsent = () => {
+            try { return localStorage.getItem(LEADERBOARD_ONLINE_CONSENT_KEY) === '1'; } catch (e) { return false; }
+        };
         const GS_COMMANDS_POLL_INTERVAL_MS = 2000;
         const GS_COMMANDS_PROCESSED_IDS_STORAGE_KEY = 'webFarmProcessedSheetCommandIds';
         const GS_COMMANDS_LAST_RECEIVED_AT_STORAGE_KEY = 'webFarmSheetConsoleLastReceivedAt';
@@ -126,6 +138,11 @@
             rare: 2,
             ultra_rare: 1,
             default: 6,
+        };
+        /** Per-gear max units per shop rotation (overrides rarity-based limit). */
+        const GEAR_STOCK_LIMIT_BY_KEY = {
+            super_seed: 2,
+            cosmic_splash: 2,
         };
         const DAILY_QUEST_COUNT = 2;
 
@@ -170,7 +187,7 @@
             return (gameState.rebirthCount || 0) >= min;
         };
 
-        const MAX_GROWTH_LEVELS = 7; const GROWTH_MULTIPLIERS = [1.0, 0.85, 0.70, 0.55, 0.40, 0.25, 0.15, 0.08]; const GROWTH_UPGRADE_COSTS = [200, 600, 1800, 5000, 12000, 500000, 3000000];
+        const MAX_GROWTH_LEVELS = 8; const GROWTH_MULTIPLIERS = [1.0, 0.85, 0.70, 0.55, 0.40, 0.25, 0.15, 0.08, 0.05]; const GROWTH_UPGRADE_COSTS = [200, 600, 1800, 5000, 12000, 500000, 3000000, 20000000];
 
         const SPECIAL_STATUSES = {
             'golden': { name: 'Golden', icon: '🥇', chance: 0.10, sellMultiplier: 1.8, type: 'generic' },
@@ -178,6 +195,7 @@
             'bronze': { name: 'Bronze', icon: '🥉', chance: 0.15, sellMultiplier: 1.3, type: 'generic' },
             'pollinated': { name: 'Pollinated', icon: '🍯', chance: 0.03, sellMultiplier: 2.5, type: 'generic' },
             'maple': { name: 'Maple', icon: '🍁', chance: 0.002, sellMultiplier: 2.2, type: 'generic' },
+            'twisted': { name: 'Twisted', icon: '🌪️', chance: 0.002, sellMultiplier: 2.4, type: 'generic' },
             'rainbow': { name: 'Rainbow', icon: '🌈', chance: 0.03, sellMultiplier: 4.0, type: 'rare_generic' },
             'cosmic': { name: 'Cosmic', icon: '🌌', chance: 0.01, sellMultiplier: 5.0, type: 'rare_generic' },
             'disco': { name: 'Disco', icon: '🪩', chance: 0, sellMultiplier: 2.1, type: 'weather' },
@@ -223,6 +241,11 @@
                     { status: 'disco', chance: 0.10 }
                 ]
             },
+            'gale': {
+                name: 'Gale', icon: '🌪️', duration_ms: [2 * 60 * 1000, 4 * 60 * 1000], effects: [
+                    { status: 'twisted', chance: 0.12 }
+                ]
+            },
         };
         const WEATHER_TYPE_KEYS = Object.keys(WEATHER_CONFIG);
         const WEATHER_COMMAND_ONLY_KEYS = ['disco'];
@@ -233,7 +256,56 @@
             'scorched_splash': { name: 'Scorched Splash', type: 'splash', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/scorched_splash.png" alt="Scorched Splash" style="height:1.3em;width:1.3em;object-fit:contain;vertical-align:middle;">', cost: 80000, splashCount: 10, splashStatus: 'scorched', description: 'Gives 10 random crops Scorched mutation.', rarity: 'common', stockChance: 0.75 },
             'golden_splash': { name: 'Golden Splash', type: 'splash', icon: '<img src="http://raw.githubusercontent.com/guahhinc/webfarm/main/golden_splash.png" alt="Golden Splash" style="height:1.3em;width:1.3em;object-fit:contain;vertical-align:middle;">', cost: 300000, splashCount: 10, splashStatus: 'golden', description: 'Gives 10 random crops Golden mutation.', rarity: 'rare', stockChance: 0.25 },
             'rainbow_splash': { name: 'Rainbow Splash', type: 'splash', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/rainbow_splash.png" alt="Rainbow Splash" style="height:1.3em;width:1.3em;object-fit:contain;vertical-align:middle;">', cost: 800000, splashCount: 10, splashStatus: 'rainbow', description: 'Gives 10 random crops Rainbow mutation.', rarity: 'rare', stockChance: 0.15 },
-            'cosmic_splash': { name: 'Cosmic Splash', type: 'splash', icon: '<img src="http://raw.githubusercontent.com/guahhinc/webfarm/main/cosmic_splash.png" alt="Cosmic Splash" style="height:1.3em;width:1.3em;object-fit:contain;vertical-align:middle;">', cost: 20000000, splashCount: 10, splashStatus: 'cosmic', description: 'Gives 10 random crops Cosmic mutation.', rarity: 'ultra_rare', stockChance: 0.05 }
+            'cosmic_splash': { name: 'Cosmic Splash', type: 'splash', icon: '<img src="http://raw.githubusercontent.com/guahhinc/webfarm/main/cosmic_splash.png" alt="Cosmic Splash" style="height:1.3em;width:1.3em;object-fit:contain;vertical-align:middle;">', cost: 20000000, splashCount: 10, splashStatus: 'cosmic', description: 'Gives 10 random crops Cosmic mutation.', rarity: 'ultra_rare', stockChance: 0.05 },
+            'super_seed': { name: 'Super Seed', type: 'super_seed', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/super_seed.png" alt="Super Seed" style="height:1.3em;width:1.3em;object-fit:contain;vertical-align:middle;">', cost: 6000000000, description: 'Click an empty plot: gain one Rainbow seed from Lychee tier through Mangosteen (Lychee, Fig, and Star Fruit are much more likely than Rambutan or Mangosteen).', rarity: 'ultra_rare', stockChance: 0.07 }
+        };
+
+        const getGearStockBaseLimit = (key) => {
+            if (Object.prototype.hasOwnProperty.call(GEAR_STOCK_LIMIT_BY_KEY, key)) {
+                return GEAR_STOCK_LIMIT_BY_KEY[key];
+            }
+            const g = GEAR_DATA[key];
+            const rarity = (g && g.rarity) || 'common';
+            return GEAR_STOCK_LIMITS[rarity] ?? GEAR_STOCK_LIMITS.default;
+        };
+
+        const SUPER_SEED_CROP_KEYS = ['litchi', 'fig', 'star_fruit', 'rambutan', 'mangosteen'];
+        const SUPER_SEED_CROP_WEIGHTS = [7, 7, 7, 1, 1];
+        const rollSuperSeedCropKey = () => {
+            let t = Math.random() * SUPER_SEED_CROP_WEIGHTS.reduce((a, b) => a + b, 0);
+            for (let i = 0; i < SUPER_SEED_CROP_KEYS.length; i++) {
+                t -= SUPER_SEED_CROP_WEIGHTS[i];
+                if (t <= 0) return SUPER_SEED_CROP_KEYS[i];
+            }
+            return SUPER_SEED_CROP_KEYS[SUPER_SEED_CROP_KEYS.length - 1];
+        };
+
+        const buildGrowingPlotMutations = (presetStatuses = []) => {
+            const ss = presetStatuses.filter(s => SPECIAL_STATUSES[s]);
+            const hasRainbow = ss.includes('rainbow');
+            const randRare = Math.random();
+            if (randRare < SPECIAL_STATUSES.cosmic.chance) {
+                ss.push('cosmic');
+            } else if (!hasRainbow && randRare < SPECIAL_STATUSES.cosmic.chance + SPECIAL_STATUSES.rainbow.chance) {
+                ss.push('rainbow');
+            }
+            if (Math.random() < SPECIAL_STATUSES.pollinated.chance) ss.push('pollinated');
+            if (Math.random() < SPECIAL_STATUSES.golden.chance) ss.push('golden');
+            if (Math.random() < SPECIAL_STATUSES.silver.chance) ss.push('silver');
+            if (Math.random() < SPECIAL_STATUSES.bronze.chance) ss.push('bronze');
+            const mapleChance = (gameState.currentWeather === 'autumn') ? 0.07 : SPECIAL_STATUSES.maple.chance;
+            if (Math.random() < mapleChance) ss.push('maple');
+            const twistedChance = (gameState.currentWeather === 'gale') ? 0.07 : SPECIAL_STATUSES.twisted.chance;
+            if (Math.random() < twistedChance) ss.push('twisted');
+            let activeWeatherEffects = [];
+            if (gameState.currentWeather && WEATHER_CONFIG[gameState.currentWeather]?.effects) {
+                activeWeatherEffects = WEATHER_CONFIG[gameState.currentWeather].effects;
+            }
+            for (const effect of activeWeatherEffects) {
+                if (Math.random() < effect.chance && !ss.includes(effect.status)) ss.push(effect.status);
+            }
+            ss.sort();
+            return ss;
         };
 
         let gameState = null; let gameLoopInterval = null; let autoSaveInterval = null;
@@ -262,11 +334,10 @@
         let achievementPopupTimeout = null; let tipPopupTimeout = null;
         let sayBannerTimeout = null;
         let sheetCommandPollInterval = null;
-        let presenceHeartbeatInterval = null;
-        let lastPresencePingWithPollAt = 0;
-        const PRESENCE_CLIENT_ID_STORAGE_KEY = 'webFarmPresenceClientId';
-        const GS_PRESENCE_HEARTBEAT_INTERVAL_MS = 50 * 1000;
-        const PRESENCE_PING_WITH_POLL_MS = 45 * 1000;
+        let leaderboardSubmitInterval = null;
+        let leaderboardModalRefreshInterval = null;
+        let lbSubmitInFlight = false;
+        const GS_CLIENT_ID_STORAGE_KEY = 'webFarmPresenceClientId';
         let activeTooltipPlotId = null;
         let selectedGearToPlace = null;
 
@@ -292,6 +363,8 @@
         const updateLogBackdropEl = document.getElementById('update-log-backdrop');
         const updateLogListEl = document.getElementById('update-log-list');
         const updateLogDetailEl = document.getElementById('update-log-detail');
+        const leaderboardBackdropEl = document.getElementById('leaderboard-backdrop');
+        const leaderboardContentEl = document.getElementById('leaderboard-content');
         const topAnnouncementEl = document.getElementById('top-announcement');
 
         const setPurchaseQtySeeds = () => { };
@@ -322,59 +395,223 @@
             showTopAnnouncement(t, durationMs, variant);
             if (isDevModeEnabled && messagesEl) addMessage(t, logClass, forceLog);
         };
-        const getOrCreatePresenceClientId = () => {
+        let _wfLeaderboardClientIdMem = null;
+        const getOrCreateWebAppClientId = () => {
             try {
-                let id = localStorage.getItem(PRESENCE_CLIENT_ID_STORAGE_KEY);
-                if (id && String(id).trim().length > 0) return String(id).trim();
+                let id = localStorage.getItem(GS_CLIENT_ID_STORAGE_KEY);
+                if (id && String(id).trim().length > 0) {
+                    id = String(id).trim();
+                    _wfLeaderboardClientIdMem = id;
+                    return id;
+                }
                 id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('wf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12));
-                localStorage.setItem(PRESENCE_CLIENT_ID_STORAGE_KEY, id);
+                localStorage.setItem(GS_CLIENT_ID_STORAGE_KEY, id);
+                _wfLeaderboardClientIdMem = id;
                 return id;
             } catch (e) {
-                return 'wf-anon-' + Date.now();
+                if (_wfLeaderboardClientIdMem && String(_wfLeaderboardClientIdMem).trim().length > 0) {
+                    return String(_wfLeaderboardClientIdMem).trim();
+                }
+                const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('wf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12));
+                _wfLeaderboardClientIdMem = id;
+                return id;
             }
         };
-        const pingPresenceViaGet = () => {
-            if (!GS_COMMANDS_WEBAPP_URL || !gameState) return Promise.resolve();
-            const clientId = getOrCreatePresenceClientId();
-            const farmName = typeof gameState.farmName === 'string' && gameState.farmName.trim().length > 0
-                ? gameState.farmName.trim().slice(0, 32)
-                : 'Your Farm';
+
+        const computeFarmNetWorth = () => {
+            if (!gameState) return 0;
+            let v = Math.max(0, gameState.money || 0);
+            const rb = gameState.rebirthMultiplier || 1;
+            Object.entries(gameState.inventory.produce || {}).forEach(([key, item]) => {
+                if (!item || item.count <= 0) return;
+                const { baseKey, sellMultiplier } = parseItemKey(key);
+                const baseInfo = CROP_DATA[baseKey];
+                if (!baseInfo || baseInfo.sellPrice === null) return;
+                const avgWeight = item.count > 0 ? item.totalWeight / item.count : 1;
+                const unit = Math.ceil(baseInfo.sellPrice * avgWeight * sellMultiplier * rb);
+                v += unit * item.count;
+            });
+            Object.entries(gameState.inventory.seeds || {}).forEach(([invKey, n]) => {
+                const qty = Number(n) || 0;
+                if (qty <= 0) return;
+                const { baseKey } = parseItemKey(invKey);
+                const c = CROP_DATA[baseKey];
+                const cost = c?.seedCost;
+                if (cost != null && cost > 0) v += cost * qty;
+            });
+            Object.entries(gameState.inventory.gears || {}).forEach(([gk, n]) => {
+                const qty = Number(n) || 0;
+                if (qty <= 0) return;
+                const g = GEAR_DATA[gk];
+                if (g && g.cost) v += g.cost * qty;
+            });
+            return Math.floor(v);
+        };
+
+        const logAppsScript = (msg, detail) => {
+            if (detail !== undefined) console.info('[Web Farm → Apps Script]', msg, detail);
+            else console.info('[Web Farm → Apps Script]', msg);
+        };
+
+        const parseWebAppJsonResponse = async (resp) => {
+            const text = await resp.text();
+            if (!text || /^\s*</.test(text)) return null;
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const buildLeaderboardGetUrl = (paramsObj) => {
             const base = GS_COMMANDS_WEBAPP_URL.replace(/\/$/, '');
             const join = base.includes('?') ? '&' : '?';
-            const hbUrl = `${base}${join}action=heartbeat&clientId=${encodeURIComponent(clientId)}&farmName=${encodeURIComponent(farmName)}&t=${Date.now()}`;
-            return fetch(hbUrl, { method: 'GET', mode: 'cors' });
+            const params = new URLSearchParams();
+            Object.keys(paramsObj || {}).forEach((k) => {
+                const v = paramsObj[k];
+                if (v === undefined || v === null) return;
+                params.set(k, String(v));
+            });
+            params.set('_', `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
+            return `${base}${join}${params.toString()}`;
         };
-        const postPresenceHeartbeat = async () => {
-            if (!GS_COMMANDS_WEBAPP_URL || !gameState) return;
-            const clientId = getOrCreatePresenceClientId();
+
+        const fetchLeaderboardJsonGet = async (paramsObj) => {
+            if (!GS_COMMANDS_WEBAPP_URL) return null;
+            const action = (paramsObj && paramsObj.action) ? String(paramsObj.action) : '?';
+            try {
+                logAppsScript(`GET fetch (fallback) action=${action}`);
+                const resp = await fetch(buildLeaderboardGetUrl(paramsObj), {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-store',
+                });
+                const parsed = await parseWebAppJsonResponse(resp);
+                if (parsed) logAppsScript(`GET fetch OK action=${action}`, parsed.ok);
+                else console.warn('[Web Farm → Apps Script] GET fetch: not JSON (HTML/empty/CORS?) action=' + action);
+                return parsed;
+            } catch (e) {
+                console.warn('[Web Farm → Apps Script] GET fetch error action=' + action, e);
+                return null;
+            }
+        };
+
+        /** Google Apps Script /exec often breaks cross-origin fetch (redirect/HTML). JSONP via script tag works reliably. */
+        const webAppJsonp = (paramsObj) => new Promise((resolve) => {
+            if (!GS_COMMANDS_WEBAPP_URL) {
+                resolve(null);
+                return;
+            }
+            const action = (paramsObj && paramsObj.action) ? String(paramsObj.action) : 'commands';
+            const cbName = `wfGas_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+            const params = new URLSearchParams();
+            Object.keys(paramsObj || {}).forEach((k) => {
+                const v = paramsObj[k];
+                if (v === undefined || v === null) return;
+                params.set(k, String(v));
+            });
+            params.set('callback', cbName);
+            params.set('_', `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
+            const base = GS_COMMANDS_WEBAPP_URL.replace(/\/$/, '');
+            const join = base.includes('?') ? '&' : '?';
+            const url = `${base}${join}${params.toString()}`;
+            logAppsScript(`JSONP load action=${action} (check Network → script request to script.google.com)`);
+            const script = document.createElement('script');
+            let settled = false;
+            const finish = (data, reason) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(to);
+                try { delete window[cbName]; } catch (e) { /* ignore */ }
+                if (script.parentNode) script.parentNode.removeChild(script);
+                if (data != null && typeof data === 'object') {
+                    logAppsScript(`JSONP OK action=${action}`, { ok: data.ok, keys: Object.keys(data) });
+                } else {
+                    console.warn('[Web Farm → Apps Script] JSONP no data action=' + action, reason || 'timeout or script error');
+                }
+                resolve(data != null && typeof data === 'object' ? data : null);
+            };
+            const to = setTimeout(() => finish(null, 'timeout 25s'), 25000);
+            window[cbName] = (data) => finish(data);
+            script.onerror = () => finish(null, 'script onerror (blocked CSP, 404, or invalid response)');
+            script.src = url;
+            document.head.appendChild(script);
+        });
+
+        const leaderboardRequestJsonpThenGet = async (paramsObj) => {
+            const jp = await webAppJsonp(paramsObj);
+            if (jp != null) return jp;
+            logAppsScript('JSONP failed, trying GET fetch…');
+            return fetchLeaderboardJsonGet(paramsObj);
+        };
+
+        const submitLeaderboardScoreViaGet = async () => {
+            if (!GS_COMMANDS_WEBAPP_URL || !gameState || !hasLeaderboardOnlineConsent()) return null;
+            const clientId = getOrCreateWebAppClientId();
             const farmName = typeof gameState.farmName === 'string' && gameState.farmName.trim().length > 0
                 ? gameState.farmName.trim().slice(0, 32)
                 : 'Your Farm';
-            const body = JSON.stringify({ action: 'heartbeat', clientId: clientId, farmName: farmName });
-            let postOk = false;
-            try {
-                const resp = await fetch(GS_COMMANDS_WEBAPP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: body,
-                    mode: 'cors',
-                });
-                postOk = resp.ok;
-            } catch (e) {
-                /* CORS/network */
-            }
-            if (postOk) return;
-            try {
-                await pingPresenceViaGet();
-            } catch (e2) {
-                /* ignore */
-            }
+            const params = {
+                action: 'submitScore',
+                clientId,
+                farmName,
+                money: String(Math.max(0, Math.floor(gameState.money || 0))),
+                netWorth: String(computeFarmNetWorth()),
+                rebirths: String(Math.max(0, gameState.rebirthCount || 0)),
+                growthLevel: String(Math.max(0, gameState.growthSpeedLevel || 0)),
+            };
+            if (GS_LEADERBOARD_SECRET) params.secret = GS_LEADERBOARD_SECRET;
+            const out = await leaderboardRequestJsonpThenGet(params);
+            return out;
         };
-        const startPresenceHeartbeat = () => {
-            if (!GS_COMMANDS_WEBAPP_URL) return;
-            if (presenceHeartbeatInterval) clearInterval(presenceHeartbeatInterval);
-            postPresenceHeartbeat();
-            presenceHeartbeatInterval = setInterval(postPresenceHeartbeat, GS_PRESENCE_HEARTBEAT_INTERVAL_MS);
+
+        const removeLeaderboardScoreViaGet = async (clientId) => {
+            if (!GS_COMMANDS_WEBAPP_URL || !clientId) return null;
+            const params = { action: 'removeScore', clientId: String(clientId) };
+            if (GS_LEADERBOARD_SECRET) params.secret = GS_LEADERBOARD_SECRET;
+            return leaderboardRequestJsonpThenGet(params);
+        };
+
+        const submitLeaderboardScore = () => {
+            if (!GS_COMMANDS_WEBAPP_URL) {
+                logAppsScript('submitScore skipped: GS_COMMANDS_WEBAPP_URL not set');
+                return;
+            }
+            if (!gameState) {
+                logAppsScript('submitScore skipped: game not loaded');
+                return;
+            }
+            if (!hasLeaderboardOnlineConsent()) {
+                logAppsScript('submitScore skipped: open 🏆 Leaderboard and accept to opt in');
+                return;
+            }
+            if (lbSubmitInFlight) {
+                logAppsScript('submitScore skipped: previous request still in flight');
+                return;
+            }
+            lbSubmitInFlight = true;
+            logAppsScript(`submitScore tick (every ${GS_LEADERBOARD_SUBMIT_INTERVAL_MS / 1000}s)`);
+            submitLeaderboardScoreViaGet()
+                .then((r) => {
+                    if (r && r.ok === true) logAppsScript('submitScore response OK', r.updated ? { updated: true } : {});
+                    else console.warn('[Web Farm → Apps Script] submitScore bad response', r);
+                })
+                .catch((e) => console.warn('[Web Farm → Apps Script] submitScore promise error', e))
+                .finally(() => { lbSubmitInFlight = false; });
+        };
+
+        const startLeaderboardSubmitPolling = () => {
+            if (!GS_COMMANDS_WEBAPP_URL || !hasLeaderboardOnlineConsent()) {
+                if (leaderboardSubmitInterval) clearInterval(leaderboardSubmitInterval);
+                leaderboardSubmitInterval = null;
+                if (!GS_COMMANDS_WEBAPP_URL) logAppsScript('score polling off: no web app URL');
+                else logAppsScript('score polling off: leaderboard consent = false');
+                return;
+            }
+            if (leaderboardSubmitInterval) clearInterval(leaderboardSubmitInterval);
+            logAppsScript(`score polling ON every ${GS_LEADERBOARD_SUBMIT_INTERVAL_MS / 1000}s`);
+            submitLeaderboardScore();
+            leaderboardSubmitInterval = setInterval(submitLeaderboardScore, GS_LEADERBOARD_SUBMIT_INTERVAL_MS);
         };
         const normalizeConsoleCommandId = (rawId) => {
             const id = String(rawId || '').trim();
@@ -408,7 +645,7 @@
             } catch (e) {
                 console.warn('Failed to reset sheet console ids', e);
             }
-            if (showMessage) broadcastAdminNotice('Console command ID cache reset', 'action');
+            if (showMessage) broadcastAdminNotice('Sheet command ID cache reset', 'action');
         };
         const calculateGrowthMultiplier = () => { return gameState ? (GROWTH_MULTIPLIERS[gameState.growthSpeedLevel] ?? GROWTH_MULTIPLIERS[0]) : 1.0; }
         const calculateGrowthUpgradeCost = () => (!gameState || gameState.growthSpeedLevel >= MAX_GROWTH_LEVELS) ? Infinity : (GROWTH_UPGRADE_COSTS[gameState.growthSpeedLevel] ?? Infinity);
@@ -441,71 +678,46 @@
         const parseItemKey = (itemKey) => { let tempKey = itemKey; const foundStatuses = []; const allStatusKeysSorted = Object.keys(SPECIAL_STATUSES).sort(); let statusesParsed = true; while (statusesParsed) { statusesParsed = false; for (const status of allStatusKeysSorted) { if (tempKey.startsWith(status + '_')) { foundStatuses.push(status); tempKey = tempKey.substring(status.length + 1); statusesParsed = true; break; } } } let baseKey = itemKey; let statusKeys = []; if (CROP_DATA[tempKey]) { baseKey = tempKey; statusKeys = foundStatuses; } let sellMultiplier = 1; let displayPrefix = ""; let namePrefix = ""; statusKeys.forEach(statusKey => { const statusInfo = SPECIAL_STATUSES[statusKey]; if (statusInfo) { sellMultiplier *= statusInfo.sellMultiplier; displayPrefix += `${statusInfo.icon}`; namePrefix += `${statusInfo.name} `; } }); return { baseKey, statusKeys, sellMultiplier, displayPrefix: displayPrefix ? displayPrefix + ' ' : '', namePrefix }; };
 
         const showAchievementPopup = (achData) => { if (!achievementPopupEl || !achData) return; clearTimeout(achievementPopupTimeout); achPopupIconEl.textContent = achData.icon || '🏆'; achPopupTitleEl.textContent = `Achievement: ${achData.name}`; achPopupRewardEl.textContent = achData.rwd > 0 ? `Reward: ${achData.rwd}💰` : ''; achPopupRewardEl.style.display = achData.rwd > 0 ? 'block' : 'none'; achievementPopupEl.classList.add('active'); achievementPopupTimeout = setTimeout(() => achievementPopupEl.classList.remove('active'), 5000); }
-        const showTip = (tipKey, message) => { if (!gameState?.shownTips || gameState.shownTips.includes(tipKey)) return; clearTimeout(tipPopupTimeout); tipPopupTextEl.textContent = message; tipPopupEl.classList.add('active'); gameState.shownTips.push(tipKey); tipPopupTimeout = setTimeout(() => tipPopupEl.classList.remove('active'), 7000); }
+        const showTip = (tipKey, message) => { if (!gameState?.shownTips || gameState.shownTips.includes(tipKey)) return; clearTimeout(tipPopupTimeout); tipPopupTextEl.textContent = message; tipPopupEl.classList.add('active'); gameState.shownTips.push(tipKey); tipPopupTimeout = setTimeout(() => tipPopupEl.classList.remove('active'), TIP_DISPLAY_MS); }
 
         const checkAndGrantAchievement = (key) => { if (!gameState || !ACHIEVEMENT_DATA[key] || gameState.achievements[key]) return; const ach = ACHIEVEMENT_DATA[key]; let met = false; try { switch (ach.type) { case 'stats.h': met = (gameState.stats.harvested[ach.tgt] || 0) >= ach.thr; break; case 'stats.p': met = (gameState.stats.planted[ach.tgt] || 0) >= ach.thr; break; case 'stats.m': met = (gameState.stats.totalMoneyEarned || 0) >= ach.thr; break; case 'state.p': met = gameState.totalPlots >= ach.thr; break; case 'state.rb': met = gameState.rebirthCount >= ach.thr; break; case 'state.g': met = gameState.growthSpeedLevel >= ach.thr; break; case 'stats.mut': met = (gameState.stats.mutationsHarvested[ach.tgt] || 0) >= ach.thr; break; case 'all': met = Object.keys(ACHIEVEMENT_DATA).every(k => k === key || k === 'complete_all' || gameState.achievements[k]); break; default: console.warn(`Unk achievement type:${ach.type}`) } } catch (e) { console.error(`Achievement check fail ${key}:`, e); met = false; } if (met) { gameState.achievements[key] = true; let rwdMsg = ach.rwd > 0 ? ` Reward: +${ach.rwd}💰` : ""; if (ach.rwd > 0) gameState.money += ach.rwd; addMessage(`🏆 Achievement Unlocked: ${ach.name}!${rwdMsg}`, (key === 'complete_all') ? 'gold' : 'success', true); showAchievementPopup(ach); const li = achievementsListEl.querySelector(`li[data-ach-key="${key}"]`); if (li) { li.classList.add('achievement-unlocked-animate'); setTimeout(() => { li.classList.remove('achievement-unlocked-animate'); }, 1000); } updateUI(); if (key !== 'complete_all') checkAndGrantAchievement('complete_all'); } }
         const checkAllAchievements = () => { if (!gameState) return; for (const k in ACHIEVEMENT_DATA) checkAndGrantAchievement(k); }
 
         const selectCropToPlant = (key) => {
             if (!gameState) return;
-            if (CROP_DATA[key]?.seedCost !== null) {
-                if (gameState.selectedCropToPlant === key) {
-                    gameState.selectedCropToPlant = null;
-                    addMessage('Seed deselected.', 'info');
-                    updateUI();
-                    return;
-                }
-                // Equipping a seed should unequip any gear
-                selectedGearToPlace = null;
-                gameState.selectedCropToPlant = key;
-                updateUI();
-            } else {
-                addMessage(`Cannot select ${CROP_DATA[key]?.name || key}. It's not a seed.`, 'error', true);
+            const { baseKey } = parseItemKey(key);
+            if (CROP_DATA[baseKey]?.seedCost === null) {
+                addMessage(`Cannot select ${CROP_DATA[baseKey]?.name || key}. It's not a seed.`, 'error', true);
+                return;
             }
+            if (gameState.selectedCropToPlant === key) {
+                gameState.selectedCropToPlant = null;
+                addMessage('Seed deselected.', 'info');
+                updateUI();
+                return;
+            }
+            selectedGearToPlace = null;
+            gameState.selectedCropToPlant = key;
+            updateUI();
         }
 
         const plantCrop = (id) => {
             if (!gameState || id < 0 || id >= gameState.plots.length) return;
-            const p = gameState.plots[id], key = gameState.selectedCropToPlant;
+            const p = gameState.plots[id], invKey = gameState.selectedCropToPlant;
             if (!p || p.state !== 'empty') { addMessage("Plot is not empty.", 'error', true); return; }
-            if (!key) { addMessage("Select a seed to plant.", 'error', true); return; }
-            const inf = CROP_DATA[key];
-            if (inf?.seedCost === null) { addMessage(`Cannot plant '${key}'.`, 'error', true); gameState.selectedCropToPlant = null; updateUI(); return; }
-            if (!(gameState.inventory.seeds[key] > 0)) { addMessage(`No ${inf.name} seeds!`, 'error', true); return; }
+            if (!invKey) { addMessage("Select a seed to plant.", 'error', true); return; }
+            const { baseKey, statusKeys } = parseItemKey(invKey);
+            const inf = CROP_DATA[baseKey];
+            if (inf?.seedCost === null) { addMessage(`Cannot plant '${invKey}'.`, 'error', true); gameState.selectedCropToPlant = null; updateUI(); return; }
+            if (!(gameState.inventory.seeds[invKey] > 0)) { addMessage(`No ${inf.name} seeds!`, 'error', true); return; }
 
-            gameState.inventory.seeds[key]--;
-            p.state = 'growing'; p.crop = key; p.plantedTime = Date.now(); p.accruedGrowth = 0;
+            gameState.inventory.seeds[invKey]--;
+            p.state = 'growing'; p.crop = baseKey; p.plantedTime = Date.now(); p.accruedGrowth = 0;
             p.growDuration = inf.growTime * calculateGrowthMultiplier();
             p.finalWeightMultiplier = getRandomWeight(inf.weightRange);
-            p.specialStatuses = [];
+            p.specialStatuses = buildGrowingPlotMutations([...statusKeys]);
 
-            const randRare = Math.random();
-            if (randRare < SPECIAL_STATUSES.cosmic.chance) {
-                p.specialStatuses.push('cosmic');
-            } else if (randRare < SPECIAL_STATUSES.cosmic.chance + SPECIAL_STATUSES.rainbow.chance) { p.specialStatuses.push('rainbow'); }
-            if (Math.random() < SPECIAL_STATUSES.pollinated.chance) p.specialStatuses.push('pollinated');
-            if (Math.random() < SPECIAL_STATUSES.golden.chance) p.specialStatuses.push('golden');
-            if (Math.random() < SPECIAL_STATUSES.silver.chance) p.specialStatuses.push('silver');
-            if (Math.random() < SPECIAL_STATUSES.bronze.chance) p.specialStatuses.push('bronze');
-            const mapleChance = (gameState.currentWeather === 'autumn') ? 0.07 : SPECIAL_STATUSES.maple.chance;
-            if (Math.random() < mapleChance) p.specialStatuses.push('maple');
-
-            let activeWeatherEffects = [];
-            if (gameState.currentWeather && WEATHER_CONFIG[gameState.currentWeather]?.effects) {
-                activeWeatherEffects = WEATHER_CONFIG[gameState.currentWeather].effects;
-            }
-            if (activeWeatherEffects.length > 0) {
-                for (const effect of activeWeatherEffects) {
-                    if (Math.random() < effect.chance) {
-                        if (!p.specialStatuses.includes(effect.status)) {
-                            p.specialStatuses.push(effect.status);
-                        }
-                    }
-                }
-            }
-            p.specialStatuses.sort();
-
-            gameState.stats.planted[key] = (gameState.stats.planted[key] || 0) + 1;
+            gameState.stats.planted[baseKey] = (gameState.stats.planted[baseKey] || 0) + 1;
             let plantMessage = `Planted ${inf.icon} ${inf.name} in plot ${id + 1}.`;
             if (p.specialStatuses.length > 0) {
                 const statusNames = p.specialStatuses.map(s => SPECIAL_STATUSES[s].name).join(', ');
@@ -515,51 +727,43 @@
             plantMessage += ` (Est. final weight: ${p.finalWeightMultiplier.toFixed(2)}x)`;
             addMessage(plantMessage, 'success');
 
-            updateQuestProgress('plant', 1, key);
+            updateQuestProgress('plant', 1, baseKey);
             updateQuestProgress('plant_any', 1);
 
             const el = farmGridEl.querySelector(`.plot[data-plot-id="${id}"]`);
             if (el) { el.classList.add('plot-plant-animate'); setTimeout(() => el.classList.remove('plot-plant-animate'), 500); }
             const totalSeeds = Object.values(gameState.inventory.seeds).reduce((sum, count) => sum + count, 0);
-            if (totalSeeds === 0) showTip('outOfSeeds', "Out of seeds! Visit the Shop 🛒 to restock.");
+            if (totalSeeds === 0) showTip('outOfSeeds_v2', 'Out of seeds. Open the Shop to buy more seeds and gear.');
             checkAllAchievements(); updateUI();
         }
 
         const plantAllSelectedSeed = () => {
             if (!gameState) return;
-            const key = gameState.selectedCropToPlant;
-            if (!key) { addMessage("Select a seed first.", 'error', true); return; }
-            const inf = CROP_DATA[key];
+            const invKey = gameState.selectedCropToPlant;
+            if (!invKey) { addMessage("Select a seed first.", 'error', true); return; }
+            const { baseKey, statusKeys } = parseItemKey(invKey);
+            const inf = CROP_DATA[baseKey];
             if (!inf || inf.seedCost === null) return;
             let planted = 0;
             for (let i = 0; i < gameState.plots.length; i++) {
                 const p = gameState.plots[i];
-                if (p.state === 'empty' && (gameState.inventory.seeds[key] > 0)) {
-                    gameState.inventory.seeds[key]--;
-                    p.state = 'growing'; p.crop = key; p.plantedTime = Date.now(); p.accruedGrowth = 0;
+                if (p.state === 'empty' && (gameState.inventory.seeds[invKey] > 0)) {
+                    gameState.inventory.seeds[invKey]--;
+                    p.state = 'growing'; p.crop = baseKey; p.plantedTime = Date.now(); p.accruedGrowth = 0;
                     p.growDuration = inf.growTime * calculateGrowthMultiplier();
                     p.finalWeightMultiplier = getRandomWeight(inf.weightRange);
-                    p.specialStatuses = [];
-                    const randRare = Math.random();
-                    if (randRare < SPECIAL_STATUSES.cosmic.chance) p.specialStatuses.push('cosmic');
-                    else if (randRare < SPECIAL_STATUSES.cosmic.chance + SPECIAL_STATUSES.rainbow.chance) p.specialStatuses.push('rainbow');
-                    if (Math.random() < SPECIAL_STATUSES.pollinated.chance) p.specialStatuses.push('pollinated');
-                    if (Math.random() < SPECIAL_STATUSES.golden.chance) p.specialStatuses.push('golden');
-                    if (Math.random() < SPECIAL_STATUSES.silver.chance) p.specialStatuses.push('silver');
-                    if (Math.random() < SPECIAL_STATUSES.bronze.chance) p.specialStatuses.push('bronze');
-                    const mapleChance = (gameState.currentWeather === 'autumn') ? 0.07 : SPECIAL_STATUSES.maple.chance;
-                    if (Math.random() < mapleChance) p.specialStatuses.push('maple');
-                    let activeWeatherEffects = [];
-                    if (gameState.currentWeather && WEATHER_CONFIG[gameState.currentWeather]?.effects) activeWeatherEffects = WEATHER_CONFIG[gameState.currentWeather].effects;
-                    for (const effect of activeWeatherEffects) { if (Math.random() < effect.chance && !p.specialStatuses.includes(effect.status)) p.specialStatuses.push(effect.status); }
-                    p.specialStatuses.sort();
-                    gameState.stats.planted[key] = (gameState.stats.planted[key] || 0) + 1;
-                    updateQuestProgress('plant', 1, key);
+                    p.specialStatuses = buildGrowingPlotMutations([...statusKeys]);
+                    gameState.stats.planted[baseKey] = (gameState.stats.planted[baseKey] || 0) + 1;
+                    updateQuestProgress('plant', 1, baseKey);
                     updateQuestProgress('plant_any', 1);
                     planted++;
                 }
             }
-            if (planted > 0) { addMessage(`Planted ${planted} ${inf.name} seed${planted > 1 ? 's' : ''} across all empty plots!`, 'success'); checkAllAchievements(); updateUI(); }
+            if (planted > 0) {
+                addMessage(`Planted ${planted} ${inf.name} seed${planted > 1 ? 's' : ''} across all empty plots!`, 'success');
+                checkAllAchievements();
+                updateUI();
+            }
             else { addMessage(`No empty plots or no ${inf.name} seeds left.`, 'error', true); }
         };
 
@@ -731,7 +935,20 @@
             if (!isBulkHarvest) checkAllAchievements(); if (!isBulkHarvest) { const el = farmGridEl.querySelector(`.plot[data-plot-id="${id}"]`); if (el) { el.classList.add('plot-harvest-animate'); setTimeout(() => el.classList.remove('plot-harvest-animate'), 250); } updateUI(); } return true;
         }
 
-        const harvestAllReadyCrops = () => { if (!gameState) return; let harvestedCount = 0; gameState.plots.forEach((p, i) => { if (p.state === 'ready' && !p.isLocked && harvestCrop(i, true)) harvestedCount++; }); if (harvestedCount > 0) { checkAllAchievements(); addMessage(`Harvested ${harvestedCount} ready crop${harvestedCount > 1 ? 's' : ''}!`, 'success'); updateUI(); } else { addMessage('No unlocked crops ready to harvest.', 'info'); } }
+        const harvestAllReadyCrops = () => {
+            if (!gameState) return;
+            let harvestedCount = 0;
+            gameState.plots.forEach((p, i) => {
+                if (p.state === 'ready' && !p.isLocked && harvestCrop(i, true)) harvestedCount++;
+            });
+            if (harvestedCount > 0) {
+                checkAllAchievements();
+                addMessage(`Harvested ${harvestedCount} ready crop${harvestedCount > 1 ? 's' : ''}!`, 'success');
+                updateUI();
+            } else {
+                addMessage('No unlocked crops ready to harvest.', 'info');
+            }
+        };
 
         const sellProduce = (key, qty = 1) => {
             if (!gameState || qty <= 0) return false;
@@ -777,7 +994,7 @@
 
             addMessage(`Sold ${qty} ${namePrefix}${baseInfo.name} ${weightText} for ${earningsText}.`, messageType);
 
-            if (!hadSoldBefore && roundedTotalEarnings > 0) showTip('firstSell', 'First sale! Keep selling for upgrades and seeds.');
+            if (!hadSoldBefore && roundedTotalEarnings > 0) showTip('firstSell_v2', 'First sale! Keep selling produce to buy plots, upgrades, and seeds.');
             checkAllAchievements(); updateUI();
             return true;
         }
@@ -941,7 +1158,8 @@
                 if (!(gameState.inventory.gears[key] > 0)) { addMessage(`No ${info.name} in inventory!`, 'error', true); return; }
                 selectedGearToPlace = key;
                 gameState.selectedCropToPlant = null; // deselect seed
-                addMessage(`Selected ${info.icon} ${info.name}. Click a plot to use it.`, 'info');
+                const useHint = info.type === 'super_seed' ? 'Click an empty plot to roll a Rainbow seed.' : 'Click a plot to use it.';
+                addMessage(`Selected ${info.icon} ${info.name}. ${useHint}`, 'info');
             }
             updateUI();
         };
@@ -975,6 +1193,19 @@
                 updateUI();
                 return true;
             }
+            if (gearInfo.type === 'super_seed') {
+                const p = gameState.plots[plotId];
+                if (!p || p.state !== 'empty') { addMessage('Use Super Seed on an empty plot.', 'error', true); return false; }
+                const cropKey = rollSuperSeedCropKey();
+                const invKey = 'rainbow_' + cropKey;
+                if (!gameState.inventory.seeds) gameState.inventory.seeds = {};
+                gameState.inventory.seeds[invKey] = (gameState.inventory.seeds[invKey] || 0) + 1;
+                gameState.inventory.gears[gearKey]--;
+                const cname = CROP_DATA[cropKey]?.name || cropKey;
+                addMessage(`${gearInfo.icon} Super Seed: gained 🌈 Rainbow ${cname} seed! Select it in inventory to plant.`, 'success');
+                updateUI();
+                return true;
+            }
             return false;
         };
 
@@ -985,6 +1216,10 @@
             if (!gearInfo) return false;
             if (!(gameState.inventory.gears?.[gearKey] > 0)) { addMessage(`No ${gearInfo.name} left!`, 'error', true); selectedGearToPlace = null; updateUI(); return false; }
 
+            if (gearInfo.type === 'super_seed') {
+                addMessage('Super Seed must be used one at a time on empty plots.', 'error', true);
+                return false;
+            }
             if (gearInfo.type !== 'splash') {
                 addMessage('This gear cannot be bulk-used yet.', 'error', true);
                 return false;
@@ -1051,9 +1286,7 @@
             if (!gameState || !GEAR_DATA[key]) return;
             if (!gameState.shopGearStock) gameState.shopGearStock = {};
             if (Number.isFinite(gameState.shopGearStock[key])) return;
-            const g = GEAR_DATA[key];
-            const rarity = g.rarity || 'common';
-            const baseLimit = GEAR_STOCK_LIMITS[rarity] ?? GEAR_STOCK_LIMITS.default;
+            const baseLimit = getGearStockBaseLimit(key);
             const variationFactor = 0.9 + Math.random() * 0.2;
             gameState.shopGearStock[key] = Math.max(1, Math.round(baseLimit * variationFactor));
         };
@@ -1156,9 +1389,7 @@
             }
             gameState.shopGearStock = {};
             gameState.shopCurrentlyAvailableGearKeys.forEach(k => {
-                const g = GEAR_DATA[k];
-                const rarity = g.rarity || 'common';
-                const baseLimit = GEAR_STOCK_LIMITS[rarity] ?? GEAR_STOCK_LIMITS.default;
+                const baseLimit = getGearStockBaseLimit(k);
                 const variationFactor = 0.9 + Math.random() * 0.2;
                 gameState.shopGearStock[k] = Math.max(1, Math.round(baseLimit * variationFactor));
             });
@@ -1168,9 +1399,7 @@
                 for (let i = 0; i < n; i++) {
                     const k = shuffled[i];
                     gameState.shopCurrentlyAvailableGearKeys.push(k);
-                    const g = GEAR_DATA[k];
-                    const rarity = g.rarity || 'common';
-                    const baseLimit = GEAR_STOCK_LIMITS[rarity] ?? GEAR_STOCK_LIMITS.default;
+                    const baseLimit = getGearStockBaseLimit(k);
                     const variationFactor = 0.9 + Math.random() * 0.2;
                     gameState.shopGearStock[k] = Math.max(1, Math.round(baseLimit * variationFactor));
                 }
@@ -1410,7 +1639,7 @@
                 if (questStatusTextEl) questStatusTextEl.textContent = "(Disabled with active mod)";
             }
 
-            const totalHarvests = Object.values(gameState.stats.harvested).reduce((a, b) => a + b, 0); if (gameState.money >= 20 && totalHarvests >= 1 && !gameState.stats.hasSoldProduce) showTip('checkMarket', 'Got produce? Check Shop 🛒 to sell, buy seeds, or get upgrades.'); const nextPlotCost = calculatePlotCost(); if (gameState.totalPlots < 5 && gameState.money >= nextPlotCost) showTip('plotUpgradeAfford', `Expand farm! Buy Plot for ${nextPlotCost}💰 in Shop 🛒.`); const nextGrowthCost = calculateGrowthUpgradeCost(); if (gameState.growthSpeedLevel < 2 && gameState.money >= nextGrowthCost && gameState.totalPlots > INITIAL_PLOTS) showTip('growthUpgradeAfford', `Speed up! Improve Growth for ${nextGrowthCost}💰 in Shop 🛒.`);
+            const totalHarvests = Object.values(gameState.stats.harvested).reduce((a, b) => a + b, 0); if (gameState.money >= 20 && totalHarvests >= 1 && !gameState.stats.hasSoldProduce) showTip('checkMarket_v2', 'Use the Shop for seeds, plots, growth upgrades, and gear. Weather changes which mutations can appear.'); const nextPlotCost = calculatePlotCost(); if (gameState.totalPlots < 5 && gameState.money >= nextPlotCost) showTip('plotUpgradeAfford_v2', `You can afford another plot (${formatMoney(nextPlotCost)}💰). More plots means more crops at once.`); const nextGrowthCost = calculateGrowthUpgradeCost(); if (gameState.growthSpeedLevel < 2 && gameState.money >= nextGrowthCost && gameState.totalPlots > INITIAL_PLOTS) showTip('growthUpgradeAfford_v2', `Growth upgrades make crops finish faster (${formatMoney(nextGrowthCost)}💰 in the Shop).`);
 
             // Safety net: if the player is broke and has no crops, grant a bailout once per situation.
             const hasAnySeeds = Object.values(gameState.inventory.seeds || {}).some(count => count > 0);
@@ -2296,15 +2525,15 @@
             generateNewDailyQuests();
             checkAllAchievements();
             updateUI();
-            setTimeout(() => showTip('welcome', 'Hi Farmer! Select seed, then click empty 🟫 plot to plant.'), 1500);
+            setTimeout(() => showTip('welcome_v2', 'Welcome! Select a seed, plant on empty plots, harvest when ready, sell in your inventory. Rebirths unlock expensive shop fruits. Check Settings for the update log, promos, and keys.'), 1500);
         }
         const executeAdminCommandText = (rawText, source = 'console') => {
             if (!gameState) return false;
             const txt = String(rawText || '').trim();
             if (!txt.startsWith('/')) return false;
-            const args = txt.substring(1).split(' ');
-            const cmd = (args[0] || '').toLowerCase();
-            const params = args.slice(1);
+            const parts = txt.substring(1).trim().split(/\s+/);
+            const cmd = (parts[0] || '').toLowerCase();
+            const params = parts.slice(1);
             let needsUI = false;
             try {
                 switch (cmd) {
@@ -2361,6 +2590,7 @@
                     case 'addgear': {
                         const key = (params[0] || '').toLowerCase(); const amt = parseInt(params[1], 10);
                         if (!GEAR_DATA[key] || isNaN(amt) || amt <= 0) { addMessage("Usage: /addgear [gear_key] [amount]", 'error'); break; }
+                        if (!gameState.inventory.gears) gameState.inventory.gears = {};
                         gameState.inventory.gears[key] = (gameState.inventory.gears[key] || 0) + amt; needsUI = true; broadcastAdminNotice(`Received ${amt} ${GEAR_DATA[key].name}`, 'action');
                     } break;
                     case 'grow': {
@@ -2388,9 +2618,21 @@
                     case 'setstock': {
                         const type = (params[0] || '').toLowerCase(); const key = (params[1] || '').toLowerCase(); const amt = parseInt(params[2], 10);
                         if (isNaN(amt) || amt < 0) { addMessage("Usage: /setstock [seed|gear] [key] [amount]", 'error'); break; }
-                        if (type === 'seed' && CROP_DATA[key] && CROP_DATA[key].seedCost !== null) { gameState.shopSeedStock[key] = amt; if (amt > 0 && !gameState.shopCurrentlyAvailableSeedKeys.includes(key)) gameState.shopCurrentlyAvailableSeedKeys.push(key); needsUI = true; broadcastAdminNotice(`Stocked ${CROP_DATA[key].name} x${amt}`, 'action'); }
-                        else if (type === 'gear' && GEAR_DATA[key]) { gameState.shopGearStock[key] = amt; if (amt > 0 && !gameState.shopCurrentlyAvailableGearKeys.includes(key)) gameState.shopCurrentlyAvailableGearKeys.push(key); needsUI = true; broadcastAdminNotice(`Stocked ${GEAR_DATA[key].name} x${amt}`, 'action'); }
-                        else addMessage("Usage: /setstock [seed|gear] [key] [amount]", 'error');
+                        if (type === 'seed' && CROP_DATA[key] && CROP_DATA[key].seedCost !== null) {
+                            if (!gameState.shopSeedStock) gameState.shopSeedStock = {};
+                            if (!Array.isArray(gameState.shopCurrentlyAvailableSeedKeys)) gameState.shopCurrentlyAvailableSeedKeys = [];
+                            gameState.shopSeedStock[key] = amt;
+                            if (amt > 0 && !gameState.shopCurrentlyAvailableSeedKeys.includes(key)) gameState.shopCurrentlyAvailableSeedKeys.push(key);
+                            if (amt <= 0) gameState.shopCurrentlyAvailableSeedKeys = gameState.shopCurrentlyAvailableSeedKeys.filter(k => k !== key);
+                            needsUI = true; broadcastAdminNotice(`Stocked ${CROP_DATA[key].name} x${amt}`, 'action');
+                        } else if (type === 'gear' && GEAR_DATA[key]) {
+                            if (!gameState.shopGearStock) gameState.shopGearStock = {};
+                            if (!Array.isArray(gameState.shopCurrentlyAvailableGearKeys)) gameState.shopCurrentlyAvailableGearKeys = [];
+                            gameState.shopGearStock[key] = amt;
+                            if (amt > 0 && !gameState.shopCurrentlyAvailableGearKeys.includes(key)) gameState.shopCurrentlyAvailableGearKeys.push(key);
+                            if (amt <= 0) gameState.shopCurrentlyAvailableGearKeys = gameState.shopCurrentlyAvailableGearKeys.filter(k => k !== key);
+                            needsUI = true; broadcastAdminNotice(`Stocked ${GEAR_DATA[key].name} x${amt}`, 'action');
+                        } else addMessage("Usage: /setstock [seed|gear] [key] [amount]", 'error');
                     } break;
                     case 'stock': {
                         const key = (params[0] || '').toLowerCase();
@@ -2444,17 +2686,11 @@
         const pollGoogleSheetCommands = async () => {
             if (!GS_COMMANDS_WEBAPP_URL || !gameState) return;
             try {
-                const nowPing = Date.now();
-                if (nowPing - lastPresencePingWithPollAt >= PRESENCE_PING_WITH_POLL_MS) {
-                    lastPresencePingWithPollAt = nowPing;
-                    pingPresenceViaGet().catch(() => { });
-                }
                 // Auto-reset command ID cache every 3h from the last received command.
                 const lastReceivedRaw = localStorage.getItem(GS_COMMANDS_LAST_RECEIVED_AT_STORAGE_KEY);
                 const lastReceivedAt = parseInt(lastReceivedRaw || '0', 10);
                 if (!isNaN(lastReceivedAt) && lastReceivedAt > 0 && (Date.now() - lastReceivedAt) >= GS_COMMANDS_AUTO_RESET_MS) {
                     resetSheetConsoleIds(false);
-                    broadcastAdminNotice('Console command ID cache auto-reset after 3 hours.', 'action', 8000);
                 }
                 const resp = await fetch(`${GS_COMMANDS_WEBAPP_URL}${GS_COMMANDS_WEBAPP_URL.includes('?') ? '&' : '?'}t=${Date.now()}`);
                 if (!resp.ok) return;
@@ -2476,7 +2712,7 @@
                             processed = new Set([id]);
                             saveProcessedSheetCommandIds(processed);
                             try { localStorage.setItem(GS_COMMANDS_LAST_RECEIVED_AT_STORAGE_KEY, String(Date.now())); } catch (e) { }
-                            broadcastAdminNotice('Console command ID cache reset', 'action');
+                            broadcastAdminNotice('Sheet command ID cache reset', 'action');
                             continue;
                         }
                         executeAdminCommandText(cmdText, 'sheet');
@@ -2612,6 +2848,31 @@
                     if (e.target === updateLogBackdropEl) closeUpdateLogPopup();
                 });
             }
+            if (leaderboardBackdropEl) {
+                leaderboardBackdropEl.addEventListener('click', (e) => {
+                    if (e.target === leaderboardBackdropEl) closeLeaderboardPopup();
+                });
+            }
+            const leaderboardBtn = document.getElementById('leaderboard-button');
+            if (leaderboardBtn) leaderboardBtn.addEventListener('click', () => openLeaderboardPopup());
+            const leaderboardCloseBtn = document.getElementById('leaderboard-close-button');
+            if (leaderboardCloseBtn) leaderboardCloseBtn.addEventListener('click', () => closeLeaderboardPopup());
+            if (leaderboardContentEl) {
+                leaderboardContentEl.addEventListener('click', (e) => {
+                    const t = e.target;
+                    if (!t || !t.id) return;
+                    if (t.id === 'leaderboard-view-cached') {
+                        e.preventDefault();
+                        showLastSavedLeaderboard();
+                    }
+                    if (t.id === 'leaderboard-retry-fetch') {
+                        e.preventDefault();
+                        loadLeaderboardIntoModal();
+                    }
+                });
+            }
+            const leaveLbBtn = document.getElementById('leave-leaderboard-button');
+            if (leaveLbBtn) leaveLbBtn.addEventListener('click', () => leaveLeaderboardOnlinePlay());
 
             // Keyboard shortcuts (configurable in settings)
             document.addEventListener('keydown', (e) => {
@@ -2749,6 +3010,61 @@
             if (backdrop) {
                 backdrop.classList.add('active');
             }
+            const lbRow = document.getElementById('settings-leaderboard-row');
+            if (lbRow) lbRow.style.display = hasLeaderboardOnlineConsent() ? '' : 'none';
+        };
+
+        const stopLeaderboardModalAutoRefresh = () => {
+            if (leaderboardModalRefreshInterval) {
+                clearInterval(leaderboardModalRefreshInterval);
+                leaderboardModalRefreshInterval = null;
+            }
+        };
+
+        const startLeaderboardModalAutoRefresh = () => {
+            stopLeaderboardModalAutoRefresh();
+            leaderboardModalRefreshInterval = setInterval(() => {
+                if (!leaderboardBackdropEl || !leaderboardBackdropEl.classList.contains('active')) return;
+                if (!hasLeaderboardOnlineConsent()) return;
+                loadLeaderboardIntoModal({ showLoading: false, silent: true });
+            }, LEADERBOARD_MODAL_REFRESH_MS);
+        };
+
+        const leaveLeaderboardOnlinePlay = async () => {
+            const url = GS_COMMANDS_WEBAPP_URL;
+            const hadConsent = hasLeaderboardOnlineConsent();
+            let serverRemoved = true;
+            stopLeaderboardModalAutoRefresh();
+            if (url && hadConsent) {
+                const clientId = getOrCreateWebAppClientId();
+                serverRemoved = false;
+                logAppsScript('removeScore: deleting sheet row(s)…');
+                for (let attempt = 0; attempt < 4; attempt++) {
+                    if (attempt > 0) await new Promise((r) => setTimeout(r, 400 * attempt));
+                    const data = await removeLeaderboardScoreViaGet(clientId);
+                    logAppsScript(`removeScore attempt ${attempt + 1}`, data);
+                    if (data && data.ok === true) {
+                        serverRemoved = true;
+                        break;
+                    }
+                }
+            }
+            try {
+                localStorage.removeItem(LEADERBOARD_ONLINE_CONSENT_KEY);
+                localStorage.removeItem(LEADERBOARD_CACHE_STORAGE_KEY);
+            } catch (e) { /* ignore */ }
+            if (leaderboardSubmitInterval) {
+                clearInterval(leaderboardSubmitInterval);
+                leaderboardSubmitInterval = null;
+            }
+            if (url && hadConsent && !serverRemoved) {
+                addMessage('You left online leaderboards, but the server did not confirm removal (offline?). Try again when online; you can rejoin anytime from the leaderboard button.', 'warning', true);
+            } else {
+                addMessage('You left online leaderboards. You can join again anytime from the leaderboard button.', 'info', true);
+            }
+            closeLeaderboardPopup();
+            const lbRow = document.getElementById('settings-leaderboard-row');
+            if (lbRow) lbRow.style.display = 'none';
         };
 
         const closeSettingsPopup = () => {
@@ -2759,6 +3075,20 @@
         };
 
         const UPDATE_LOG_ENTRIES = [
+            {
+                id: '1.2.8',
+                title: 'v1.2.8 Super Seeded',
+                changes: [
+                    'Added Super Seed',
+                    'Added Mangosteen and Passionfruit',
+                    'Added Leaderboards',
+                    'Added Twisted Mutation',
+                    'Added Gale Weather Event',
+                    'Revamped Tutorial Pop Ups',
+                    'Added 8th Growth Upgrade',
+                    'Bug Fixes',
+                ],
+            },
             {
                 id: '1.2.7',
                 title: 'v1.2.7 A Little Easier',
@@ -2842,6 +3172,184 @@
             if (updateLogBackdropEl) updateLogBackdropEl.classList.remove('active');
         };
 
+        const escapeLeaderboardHtml = (s) => String(s || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+
+        const saveLeaderboardCache = (entries) => {
+            try {
+                localStorage.setItem(LEADERBOARD_CACHE_STORAGE_KEY, JSON.stringify({ savedAt: Date.now(), entries: Array.isArray(entries) ? entries : [] }));
+            } catch (e) { /* quota / private mode */ }
+        };
+
+        const loadLeaderboardCache = () => {
+            try {
+                const raw = localStorage.getItem(LEADERBOARD_CACHE_STORAGE_KEY);
+                if (!raw) return null;
+                const o = JSON.parse(raw);
+                if (!o || typeof o.savedAt !== 'number' || !Array.isArray(o.entries)) return null;
+                return { savedAt: o.savedAt, entries: o.entries };
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const fetchLeaderboardEntries = async () => {
+            if (!GS_COMMANDS_WEBAPP_URL || !hasLeaderboardOnlineConsent()) {
+                logAppsScript('fetch leaderboard skipped: no URL or no consent');
+                return { ok: false, entries: [] };
+            }
+            logAppsScript('fetch leaderboard rows…');
+            let data = await leaderboardRequestJsonpThenGet({ action: 'leaderboard' });
+            if (data?.ok && Array.isArray(data.entries)) {
+                logAppsScript(`leaderboard loaded ${data.entries.length} row(s)`);
+                return { ok: true, entries: data.entries.slice() };
+            }
+            const base = GS_COMMANDS_WEBAPP_URL.replace(/\/$/, '');
+            const join = base.includes('?') ? '&' : '?';
+            const bust = `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+            const url = `${base}${join}action=leaderboard&t=${encodeURIComponent(bust)}`;
+            try {
+                logAppsScript('leaderboard second-chance GET…');
+                const resp = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-store',
+                });
+                if (!resp.ok) {
+                    console.warn('[Web Farm → Apps Script] leaderboard GET status', resp.status);
+                    return { ok: false, entries: [] };
+                }
+                const parsed = await parseWebAppJsonResponse(resp);
+                if (!parsed?.ok || !Array.isArray(parsed.entries)) {
+                    console.warn('[Web Farm → Apps Script] leaderboard parse failed');
+                    return { ok: false, entries: [] };
+                }
+                logAppsScript(`leaderboard loaded (GET) ${parsed.entries.length} row(s)`);
+                return { ok: true, entries: parsed.entries.slice() };
+            } catch (e) {
+                console.warn('[Web Farm → Apps Script] leaderboard GET error', e);
+                return { ok: false, entries: [] };
+            }
+        };
+
+        const renderLeaderboardRows = (entries, opts = {}) => {
+            if (!leaderboardContentEl) return;
+            const banner = opts.cachedNotice
+                ? `<div class="leaderboard-cache-banner">${escapeLeaderboardHtml(opts.cachedNotice)}</div>`
+                : '';
+            const tryAgain = opts.showTryAgain
+                ? '<p class="leaderboard-cache-footer"><button type="button" class="leaderboard-consent-btn leaderboard-consent-decline" id="leaderboard-retry-fetch">Try again</button></p>'
+                : '';
+            if (!entries.length) {
+                leaderboardContentEl.innerHTML = `${banner}<p class="leaderboard-empty">No entries yet. Scores sync while you play after joining.</p>${tryAgain}`;
+                return;
+            }
+            const rows = entries.map((e, i) => {
+                const name = escapeLeaderboardHtml(e.farmName || 'Farm');
+                const money = formatMoney(Math.floor(Number(e.money) || 0));
+                const nw = formatMoney(Math.floor(Number(e.netWorth) || 0));
+                const rb = Number(e.rebirths) || 0;
+                const glRaw = Number(e.growthLevel) || 0;
+                const glDisplay = glRaw >= MAX_GROWTH_LEVELS ? 'Max' : String(glRaw);
+                return `<tr><td>${i + 1}</td><td>${name}</td><td class="leaderboard-num">${money}</td><td class="leaderboard-num">${nw}</td><td class="leaderboard-num">${rb}</td><td class="leaderboard-num">${glDisplay}</td></tr>`;
+            }).join('');
+            leaderboardContentEl.innerHTML = `${banner}<div class="leaderboard-table-wrap"><table class="leaderboard-table"><thead><tr><th>#</th><th>Farm</th><th>Money</th><th>Value</th><th>Rebirths</th><th>Growth</th></tr></thead><tbody>${rows}</tbody></table></div>${tryAgain}`;
+        };
+
+        const renderLeaderboardFetchFailedUI = () => {
+            if (!leaderboardContentEl) return;
+            const cache = loadLeaderboardCache();
+            const hasCache = cache && Array.isArray(cache.entries);
+            const whenStr = hasCache ? new Date(cache.savedAt).toLocaleString() : '';
+            const cacheBlock = hasCache
+                ? `<p class="leaderboard-offline-hint">You have a saved copy from when you were last online: <strong>${escapeLeaderboardHtml(whenStr)}</strong></p>
+                   <button type="button" class="leaderboard-consent-btn leaderboard-consent-accept" id="leaderboard-view-cached">View saved leaderboard</button>`
+                : '<p class="leaderboard-offline-hint">No saved copy yet. Open the leaderboard once while online to keep a backup in this browser.</p>';
+            leaderboardContentEl.innerHTML = `<div class="leaderboard-fetch-fail">
+                <p class="leaderboard-empty">Could not load the latest leaderboard (offline or server error).</p>
+                ${cacheBlock}
+                <button type="button" class="leaderboard-consent-btn leaderboard-consent-decline" id="leaderboard-retry-fetch">Try again</button>
+            </div>`;
+        };
+
+        const showLastSavedLeaderboard = () => {
+            const cache = loadLeaderboardCache();
+            if (!leaderboardContentEl) return;
+            if (!cache || !Array.isArray(cache.entries)) {
+                leaderboardContentEl.innerHTML = '<p class="leaderboard-empty">No saved leaderboard found.</p>';
+                return;
+            }
+            const whenStr = new Date(cache.savedAt).toLocaleString();
+            renderLeaderboardRows(cache.entries, {
+                cachedNotice: `Saved copy from ${whenStr}. Rankings may be outdated.`,
+                showTryAgain: true,
+            });
+        };
+
+        const loadLeaderboardIntoModal = async (opts = {}) => {
+            if (!leaderboardContentEl) return;
+            const showLoading = opts.showLoading !== false;
+            const silent = opts.silent === true;
+            if (showLoading) {
+                leaderboardContentEl.innerHTML = '<p class="leaderboard-loading">Loading…</p>';
+            }
+            try {
+                const { ok, entries } = await fetchLeaderboardEntries();
+                if (ok) {
+                    saveLeaderboardCache(entries);
+                    renderLeaderboardRows(entries);
+                } else if (!silent) {
+                    renderLeaderboardFetchFailedUI();
+                }
+            } catch (err) {
+                if (!silent) renderLeaderboardFetchFailedUI();
+            }
+        };
+
+        const showLeaderboardConsentPanel = () => {
+            if (!leaderboardContentEl) return;
+            const warning = 'Online play is not rated, you may encounter harmful content or language in online and public sections of the game.';
+            leaderboardContentEl.innerHTML = `
+                <div class="leaderboard-consent">
+                    <p class="leaderboard-consent-title">Join leaderboards</p>
+                    <p class="leaderboard-consent-text">${escapeLeaderboardHtml(warning)}</p>
+                    <p class="leaderboard-consent-sub">If you accept, your farm name and stats can appear on the public leaderboard. They sync to the sheet every 15 seconds while you play, and the open leaderboard refreshes from the sheet every 15 seconds. A copy is saved in this browser for offline viewing.</p>
+                    <div class="leaderboard-consent-actions">
+                        <button type="button" class="leaderboard-consent-btn leaderboard-consent-accept" id="leaderboard-consent-accept">Accept and continue</button>
+                        <button type="button" class="leaderboard-consent-btn leaderboard-consent-decline" id="leaderboard-consent-decline">Not now</button>
+                    </div>
+                </div>`;
+            const acc = document.getElementById('leaderboard-consent-accept');
+            const dec = document.getElementById('leaderboard-consent-decline');
+            if (acc) acc.addEventListener('click', () => {
+                try { localStorage.setItem(LEADERBOARD_ONLINE_CONSENT_KEY, '1'); } catch (e) { /* ignore */ }
+                startLeaderboardSubmitPolling();
+                loadLeaderboardIntoModal();
+                startLeaderboardModalAutoRefresh();
+            }, { once: true });
+            if (dec) dec.addEventListener('click', () => closeLeaderboardPopup());
+        };
+
+        const openLeaderboardPopup = () => {
+            if (!leaderboardBackdropEl || !leaderboardContentEl) return;
+            leaderboardBackdropEl.classList.add('active');
+            if (!hasLeaderboardOnlineConsent()) {
+                showLeaderboardConsentPanel();
+                return;
+            }
+            submitLeaderboardScore();
+            loadLeaderboardIntoModal();
+            startLeaderboardModalAutoRefresh();
+        };
+
+        const closeLeaderboardPopup = () => {
+            stopLeaderboardModalAutoRefresh();
+            if (leaderboardBackdropEl) leaderboardBackdropEl.classList.remove('active');
+        };
+
         const selectUpdateLogEntry = (entryId) => {
             renderUpdateLogDetails(entryId);
         };
@@ -2883,14 +3391,17 @@
 
         const initGame = () => {
             handleSeasonalEvents(); // Check for limited-time events first
-            if (gameLoopInterval) clearInterval(gameLoopInterval); if (autoSaveInterval) clearInterval(autoSaveInterval); gameLoopInterval = null; autoSaveInterval = null; isModActive = false; activeModChecksum = null; CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); isDevModeEnabled = false; if (devConsoleEl) devConsoleEl.style.display = 'none'; loadFromLocalStorage(); setupEventListeners(); if (gameState) { gameLoopInterval = setInterval(gameLoop, TICK_INTERVAL); autoSaveInterval = setInterval(() => { if (gameState && !isModActive) { saveGame(true); } else if (isModActive) { /* Autosave skipped: Mod active. */ } else { console.warn("Autosave skipped: gameState null."); if (autoSaveInterval) clearInterval(autoSaveInterval); if (gameLoopInterval) clearInterval(gameLoopInterval); } }, AUTOSAVE_INTERVAL); } else { console.error("CRITICAL: Game state failed to init."); addMessage("CRITICAL ERROR INITIALIZING. Please refresh.", "error", true); }
+            if (gameLoopInterval) clearInterval(gameLoopInterval); if (autoSaveInterval) clearInterval(autoSaveInterval); if (sheetCommandPollInterval) clearInterval(sheetCommandPollInterval); if (leaderboardSubmitInterval) clearInterval(leaderboardSubmitInterval); stopLeaderboardModalAutoRefresh();
+            gameLoopInterval = null; autoSaveInterval = null; sheetCommandPollInterval = null; leaderboardSubmitInterval = null;
+            isModActive = false; activeModChecksum = null; CROP_DATA = JSON.parse(JSON.stringify(DEFAULT_CROP_DATA)); isDevModeEnabled = false; if (devConsoleEl) devConsoleEl.style.display = 'none'; loadFromLocalStorage(); setupEventListeners(); if (gameState) { gameLoopInterval = setInterval(gameLoop, TICK_INTERVAL); autoSaveInterval = setInterval(() => { if (gameState && !isModActive) { saveGame(true); } else if (isModActive) { /* Autosave skipped: Mod active. */ } else { console.warn("Autosave skipped: gameState null."); if (autoSaveInterval) clearInterval(autoSaveInterval); if (gameLoopInterval) clearInterval(gameLoopInterval); } }, AUTOSAVE_INTERVAL); } else { console.error("CRITICAL: Game state failed to init."); addMessage("CRITICAL ERROR INITIALIZING. Please refresh.", "error", true); }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             initGame();
             syncShopBuyModeButtons();
             startGoogleSheetCommandPolling();
-            startPresenceHeartbeat();
+            startLeaderboardSubmitPolling();
+            console.info('[Web Farm → Apps Script] Open DevTools (F12) → Console to see leaderboard traffic. Apps Script: Executions + View logs after redeploying code.gs.');
         });
 
         // Copyright Guahh Inc 2026

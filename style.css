@@ -1654,6 +1654,171 @@
             display: flex;
         }
 
+        #leaderboard-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+        }
+
+        #leaderboard-backdrop.active {
+            display: flex;
+        }
+
+        #leaderboard-modal {
+            background-color: var(--section-bg);
+            border-radius: 8px;
+            border: 1px solid var(--section-border);
+            padding: 14px 16px;
+            width: min(900px, 96vw);
+            min-height: min(420px, 75vh);
+            max-height: min(560px, 85vh);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 6px 14px var(--shadow-color);
+        }
+
+        .leaderboard-content {
+            overflow-y: auto;
+            min-height: 0;
+            flex: 1 1 auto;
+            margin-top: 8px;
+        }
+
+        .leaderboard-loading,
+        .leaderboard-empty {
+            margin: 12px 0;
+            color: var(--log-text-color);
+            font-size: 0.95em;
+        }
+
+        .leaderboard-table-wrap {
+            overflow-x: auto;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88em;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--section-border);
+        }
+
+        .leaderboard-table th {
+            color: var(--heading-color);
+            font-weight: 600;
+        }
+
+        .leaderboard-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .leaderboard-num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .leaderboard-consent {
+            padding: 4px 2px 8px;
+        }
+
+        .leaderboard-consent-title {
+            margin: 0 0 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--heading-color);
+        }
+
+        .leaderboard-consent-text {
+            margin: 0 0 10px;
+            line-height: 1.45;
+            color: var(--text-color);
+        }
+
+        .leaderboard-consent-sub {
+            margin: 0 0 16px;
+            font-size: 0.9em;
+            line-height: 1.4;
+            color: var(--log-text-color);
+        }
+
+        .leaderboard-consent-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .leaderboard-consent-btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--section-border);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+
+        .leaderboard-consent-accept {
+            background: var(--accent-color);
+            color: var(--button-text-color);
+            border-color: var(--accent-hover-color);
+        }
+
+        .leaderboard-consent-accept:hover {
+            background: var(--accent-hover-color);
+        }
+
+        .leaderboard-consent-decline {
+            background: var(--container-bg);
+            color: var(--text-color);
+        }
+
+        .leaderboard-consent-decline:hover {
+            background: var(--button-hover-bg);
+        }
+
+        .leaderboard-cache-banner {
+            margin: 0 0 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--section-border);
+            background: var(--container-bg);
+            color: var(--log-text-color);
+            font-size: 0.88em;
+            line-height: 1.4;
+        }
+
+        .leaderboard-fetch-fail {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .leaderboard-fetch-fail .leaderboard-empty {
+            margin: 0;
+        }
+
+        .leaderboard-offline-hint {
+            margin: 0;
+            font-size: 0.9em;
+            color: var(--log-text-color);
+            line-height: 1.4;
+            max-width: 42em;
+        }
+
+        .leaderboard-cache-footer {
+            margin: 12px 0 0;
+        }
+
         #update-log-modal {
             background-color: var(--section-bg);
             border-radius: 8px;
