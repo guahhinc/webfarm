@@ -156,9 +156,9 @@ const REBIRTH_COST_SCALE = 3.5;
 const REBIRTH_MULTIPLIER_AT_MAX = 4;
 const getRebirthMultiplier = (count) => Math.pow(REBIRTH_MULTIPLIER_AT_MAX, count / MAX_REBIRTHS);
 
-const REBIRTH_GATED_FRUIT_COUNT = 10;
-/** Unlock order: 3-rebirth increments. The final fruits all unlock at 22, so 23 unlocks nothing. */
-const REBIRTH_UNLOCK_MILESTONES = [1, 4, 7, 10, 13, 16, 19, 22, 22, 22];
+const REBIRTH_GATED_FRUIT_COUNT = 9;
+/** Unlock order: 3, 6, 9, 11, 13, 16, 19, 21, 23 (9 fruits) */
+const REBIRTH_UNLOCK_MILESTONES = [3, 6, 9, 11, 13, 16, 19, 21, 23];
 const getRebirthGatedCropKeysAscending = () => {
     const keys = Object.keys(CROP_DATA).filter(k => CROP_DATA[k].seedCost !== null);
     keys.sort((a, b) => {
@@ -701,9 +701,9 @@ const shuffleArray = (array) => { for (let i = array.length - 1; i > 0; i--) { c
 const getRandomDuration = (durationRangeMs) => Math.floor(Math.random() * (durationRangeMs[1] - durationRangeMs[0] + 1)) + durationRangeMs[0];
 const parseItemKey = (itemKey) => { let tempKey = itemKey; const foundStatuses = []; const allStatusKeysSorted = Object.keys(SPECIAL_STATUSES).sort(); let statusesParsed = true; while (statusesParsed) { statusesParsed = false; for (const status of allStatusKeysSorted) { if (tempKey.startsWith(status + '_')) { foundStatuses.push(status); tempKey = tempKey.substring(status.length + 1); statusesParsed = true; break; } } } let baseKey = itemKey; let statusKeys = []; if (CROP_DATA[tempKey]) { baseKey = tempKey; statusKeys = foundStatuses; } let sellMultiplier = 1; let displayPrefix = ""; let namePrefix = ""; statusKeys.forEach(statusKey => { const statusInfo = SPECIAL_STATUSES[statusKey]; if (statusInfo) { sellMultiplier *= statusInfo.sellMultiplier; displayPrefix += `${statusInfo.icon}`; namePrefix += `${statusInfo.name} `; } }); return { baseKey, statusKeys, sellMultiplier, displayPrefix: displayPrefix ? displayPrefix + ' ' : '', namePrefix }; };
 
-const showAchievementPopup = (achData) => { if (!achievementPopupEl || !achData) return; clearTimeout(achievementPopupTimeout); achPopupIconEl.textContent = achData.icon || '🏆'; achPopupTitleEl.textContent = `Achievement: ${achData.name}`; achPopupRewardEl.textContent = achData.rwd > 0 ? `Reward: ${achData.rwd}💰` : ''; achPopupRewardEl.style.display = achData.rwd > 0 ? 'block' : 'none'; achievementPopupEl.classList.add('active'); achievementPopupTimeout = setTimeout(() => achievementPopupEl.classList.remove('active'), 5000); }
+const showAchievementPopup = (achData) => { if (!achievementPopupEl || !achData) return; clearTimeout(achievementPopupTimeout); achPopupIconEl.textContent = achData.icon || '🏆'; achPopupTitleEl.textContent = `Achievement: ${achData.name}`; achPopupRewardEl.textContent = achData.rwd > 0 ? `Reward: ${achData.rwd}💰` : ''; achPopupRewardEl.style.display = achData.rwd > 0 ? 'block' : 'none'; achievementPopupEl.classList.add('active'); achievementPopupTimeout = setTimeout(() => achievementPopupEl.classList.remove('active'), 7000); }
 let isUpdatePopupShown = false;
-const showUpdatePopup = () => { if (!achievementPopupEl || isUpdatePopupShown) return; clearTimeout(achievementPopupTimeout); achPopupIconEl.textContent = '🔄'; achPopupTitleEl.textContent = 'Refresh for new Web Farm update'; achPopupRewardEl.textContent = ''; achPopupRewardEl.style.display = 'none'; achievementPopupEl.classList.add('active'); isUpdatePopupShown = true; achievementPopupTimeout = setTimeout(() => achievementPopupEl.classList.remove('active'), 10000); }
+const showUpdatePopup = () => { if (!achievementPopupEl || isUpdatePopupShown) return; clearTimeout(achievementPopupTimeout); achPopupIconEl.textContent = '🔄'; achPopupTitleEl.textContent = 'Cmd+Shift+R or Ctrl+Shift+R To Refresh For New Web Farm Update'; achPopupRewardEl.textContent = ''; achPopupRewardEl.style.display = 'none'; achievementPopupEl.classList.add('active'); isUpdatePopupShown = true; achievementPopupTimeout = setTimeout(() => achievementPopupEl.classList.remove('active'), 10000); }
 const showMutationNotification = (icon, message) => { if (!tipPopupEl || !tipPopupIconEl) return; clearTimeout(tipPopupTimeout); tipPopupIconEl.textContent = icon || '💡'; tipPopupTextEl.textContent = message; tipPopupEl.classList.add('active'); tipPopupTimeout = setTimeout(() => tipPopupEl.classList.remove('active'), 5000); }
 const showTip = (tipKey, message) => { if (!gameState?.shownTips || gameState.shownTips.includes(tipKey) || !tipPopupIconEl) return; clearTimeout(tipPopupTimeout); tipPopupIconEl.textContent = '💡'; tipPopupTextEl.textContent = message; tipPopupEl.classList.add('active'); gameState.shownTips.push(tipKey); tipPopupTimeout = setTimeout(() => tipPopupEl.classList.remove('active'), TIP_DISPLAY_MS); }
 
