@@ -1052,7 +1052,7 @@
         }
 
         #achievement-popup {
-            top: 20px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
             border-left: 5px solid var(--log-success-color);
@@ -1807,6 +1807,10 @@
             margin: 0;
         }
 
+        #farm-name {
+            cursor: pointer;
+        }
+
         .leaderboard-offline-hint {
             margin: 0;
             font-size: 0.9em;
@@ -1844,6 +1848,7 @@
             border-right: 1px solid var(--section-border);
             padding-right: 10px;
             overflow-y: auto;
+            overflow-x: hidden;
             min-height: 0;
         }
 
