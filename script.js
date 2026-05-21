@@ -38,6 +38,8 @@ let CROP_DATA = {
     'passionfruit': { name: 'Passionfruit', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/passionfruit.png" alt="Passionfruit" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 80000000000, sellPrice: 135000000000, growTime: 620000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.06 },
     'breadfruit': { name: 'Breadfruit', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/breadfruit.png" alt="Breadfruit" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 300000000000, sellPrice: 540000000000, growTime: 650000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.05 },
     'citrus_caviar': { name: 'Citrus Caviar', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/citrus_caviar.png" alt="Citrus Caviar" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 1000000000000, sellPrice: 1700000000000, growTime: 700000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.04 },
+    'hala_fruit': { name: 'Hala Fruit', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/hala_fruit.png" alt="Hala Fruit" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 4000000000000, sellPrice: 9500000000000, growTime: 750000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.03 },
+    'blue_quandong': { name: 'Blue Quandong', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/blue_quandong.png" alt="Blue Quandong" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: 20000000000000, sellPrice: 27500000000000, growTime: 800000, weightRange: [0.9, 1.1], rarity: 'ultra_rare', stockChance: 0.02 },
     'apple': { name: 'Apple', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/apple.png" alt="Apple" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: null, sellPrice: 135, growTime: null, weightRange: [0.9, 1.1], rarity: 'common' },
     'banana': { name: 'Banana', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/banana.png" alt="Banana" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: null, sellPrice: 220, growTime: null, weightRange: [0.85, 1.15], rarity: 'common' },
     'orange': { name: 'Orange', icon: '<img src="https://raw.githubusercontent.com/guahhinc/webfarm/main/orange.png" alt="Orange" style="height: 1.3em; width: 1.3em; object-fit: contain; vertical-align: middle;">', seedCost: null, sellPrice: 175, growTime: null, weightRange: [0.9, 1.1], rarity: 'common' },
@@ -87,9 +89,9 @@ const QUEST_DEFINITIONS = [
 ];
 
 
-const INITIAL_PLOTS = 3; const MAX_PLOTS = 36; const PLOT_COST_BASE = 75; const PLOT_COST_INCREASE_FACTOR = 1.4;
+const INITIAL_PLOTS = 3; const MAX_PLOTS = 45; const PLOT_COST_BASE = 75; const PLOT_COST_INCREASE_FACTOR = 1.4;
 const TICK_INTERVAL = 100; const AUTOSAVE_INTERVAL = 5000;
-const SAVE_CODE_VERSION = '1.3';
+const SAVE_CODE_VERSION = '1.3.1';
 const LOG_PRUNE_THRESHOLD = 80;
 const XOR_SAVE_KEY = 'webfarmkey_34252465488682';
 const REDEEMED_PROMOS_STORAGE_KEY = 'webFarmRedeemedPromoCodes';
@@ -148,7 +150,7 @@ const GEAR_STOCK_LIMIT_BY_KEY = {
 };
 const DAILY_QUEST_COUNT = 2;
 
-const MAX_REBIRTHS = 23;
+const MAX_REBIRTHS = 25;
 const REBIRTH_BASE_COST = 37500;
 // Multiplies every rebirth cost. Set to 30% cheaper than the previous 1.15 value.
 const REBIRTH_COST_MULTIPLIER = 0.805;
@@ -156,9 +158,9 @@ const REBIRTH_COST_SCALE = 3.5;
 const REBIRTH_MULTIPLIER_AT_MAX = 4;
 const getRebirthMultiplier = (count) => Math.pow(REBIRTH_MULTIPLIER_AT_MAX, count / MAX_REBIRTHS);
 
-const REBIRTH_GATED_FRUIT_COUNT = 9;
-/** Unlock order: 3, 6, 9, 11, 13, 16, 19, 21, 23 (9 fruits) */
-const REBIRTH_UNLOCK_MILESTONES = [3, 6, 9, 11, 13, 16, 19, 21, 23];
+const REBIRTH_GATED_FRUIT_COUNT = 10;
+/** Unlock order: 3, 6, 9, 11, 13, 16, 19, 21, 23, 25 (10 fruits) */
+const REBIRTH_UNLOCK_MILESTONES = [3, 6, 9, 11, 13, 16, 19, 21, 23, 25];
 const getRebirthGatedCropKeysAscending = () => {
     const keys = Object.keys(CROP_DATA).filter(k => CROP_DATA[k].seedCost !== null);
     keys.sort((a, b) => {
@@ -3130,6 +3132,18 @@ const closeSettingsPopup = () => {
 };
 
 const UPDATE_LOG_ENTRIES = [
+    {
+        id: '1.3.1',
+        title: 'v1.3.1 Extra Plots!',
+        changes: [
+            '9 More Plots',
+            'Added Hala Fruit',
+            'Added Blue Quandong',
+            '2 More Rebirths',
+            'Minor UI Changes',
+            'Bug Fixes'
+        ],
+    },
     {
         id: '1.3',
         title: 'v1.3 The Next Chapter',
