@@ -91,7 +91,7 @@ const QUEST_DEFINITIONS = [
 
 const INITIAL_PLOTS = 3; const MAX_PLOTS = 45; const PLOT_COST_BASE = 75; const PLOT_COST_INCREASE_FACTOR = 1.4;
 const TICK_INTERVAL = 100; const AUTOSAVE_INTERVAL = 5000;
-const SAVE_CODE_VERSION = '1.3.1';
+const SAVE_CODE_VERSION = '1.3.2';
 const LOG_PRUNE_THRESHOLD = 80;
 const XOR_SAVE_KEY = 'webfarmkey_34252465488682';
 const REDEEMED_PROMOS_STORAGE_KEY = 'webFarmRedeemedPromoCodes';
@@ -577,14 +577,28 @@ const submitLeaderboardScoreViaGet = async () => {
     const farmName = typeof gameState.farmName === 'string' && gameState.farmName.trim().length > 0
         ? gameState.farmName.trim().slice(0, 32)
         : 'Your Farm';
+
+    const moneyStr = String(Math.max(0, Math.floor(gameState.money || 0)));
+    const netWorthStr = String(computeFarmNetWorth());
+    const rebirthsStr = String(Math.max(0, gameState.rebirthCount || 0));
+    const growthLevelStr = String(Math.max(0, gameState.growthSpeedLevel || 0));
+
+    if (moneyStr.toLowerCase().includes('e') || moneyStr.toLowerCase().includes('nan') || moneyStr.toLowerCase().includes('inf') ||
+        netWorthStr.toLowerCase().includes('e') || netWorthStr.toLowerCase().includes('nan') || netWorthStr.toLowerCase().includes('inf') ||
+        rebirthsStr.toLowerCase().includes('e') || rebirthsStr.toLowerCase().includes('nan') || rebirthsStr.toLowerCase().includes('inf') ||
+        growthLevelStr.toLowerCase().includes('e') || growthLevelStr.toLowerCase().includes('nan') || growthLevelStr.toLowerCase().includes('inf')) {
+        logAppsScript('submitScore skipped: money or value has notation errors/e');
+        return null;
+    }
+
     const params = {
         action: 'submitScore',
         clientId,
         farmName,
-        money: String(Math.max(0, Math.floor(gameState.money || 0))),
-        netWorth: String(computeFarmNetWorth()),
-        rebirths: String(Math.max(0, gameState.rebirthCount || 0)),
-        growthLevel: String(Math.max(0, gameState.growthSpeedLevel || 0)),
+        money: moneyStr,
+        netWorth: netWorthStr,
+        rebirths: rebirthsStr,
+        growthLevel: growthLevelStr,
     };
     if (GS_LEADERBOARD_SECRET) params.secret = GS_LEADERBOARD_SECRET;
     const out = await leaderboardRequestJsonpThenGet(params);
@@ -1696,7 +1710,7 @@ const gameLoop = () => {
         needsUpdate = true;
     }
 
-    if (needsUpdate) updateUI(); else updateProgressBars();
+    if (needsUpdate) updateUI(true); else updateProgressBars();
 }
 const calculateGrowthProgress = (p) => {
     if (p?.state !== 'growing' || !p.growDuration) return 0;
@@ -1857,11 +1871,15 @@ const setShopBuyQtyMode = (mode) => {
 
 let uiUpdateTimeout = null;
 let lastUpdateTime = 0;
-const updateUI = () => {
+const updateUI = (force = false) => {
     const now = Date.now();
-    if (now - lastUpdateTime < 50) {
+    if (!force && (now - lastUpdateTime < 50)) {
         if (!uiUpdateTimeout) uiUpdateTimeout = setTimeout(() => { uiUpdateTimeout = null; updateUI(); }, 50 - (now - lastUpdateTime));
         return;
+    }
+    if (uiUpdateTimeout) {
+        clearTimeout(uiUpdateTimeout);
+        uiUpdateTimeout = null;
     }
     lastUpdateTime = now;
 
@@ -3133,6 +3151,14 @@ const closeSettingsPopup = () => {
 
 const UPDATE_LOG_ENTRIES = [
     {
+        id: '1.3.2',
+        title: 'v1.3.2 Freeze Fix & Leaderboard Filtering',
+        changes: [
+            'Fixed game loop freezing/stuck visual updates when crops finish growing',
+            'Filtered leaderboard entries containing scientific notation or error values',
+        ],
+    },
+    {
         id: '1.3.1',
         title: 'v1.3.1 Extra Plots!',
         changes: [
@@ -3359,7 +3385,20 @@ const renderLeaderboardFetchFailedUI = () => {
 };
 const sortLeaderboardEntries = (entries) => {
     if (!Array.isArray(entries)) return [];
-    return [...entries].sort((a, b) => {
+    const filtered = entries.filter(e => {
+        if (!e) return false;
+        const moneyStr = String(e.money || '').toLowerCase();
+        const netWorthStr = String(e.netWorth || '').toLowerCase();
+        const rebirthsStr = String(e.rebirths || '').toLowerCase();
+        const growthLevelStr = String(e.growthLevel || '').toLowerCase();
+
+        if (moneyStr.includes('e') || moneyStr.includes('nan') || moneyStr.includes('inf')) return false;
+        if (netWorthStr.includes('e') || netWorthStr.includes('nan') || netWorthStr.includes('inf')) return false;
+        if (rebirthsStr.includes('e') || rebirthsStr.includes('nan') || rebirthsStr.includes('inf')) return false;
+        if (growthLevelStr.includes('e') || growthLevelStr.includes('nan') || growthLevelStr.includes('inf')) return false;
+        return true;
+    });
+    return [...filtered].sort((a, b) => {
         const rbA = Number(a.rebirths) || 0;
         const rbB = Number(b.rebirths) || 0;
         if (rbB !== rbA) return rbB - rbA;
